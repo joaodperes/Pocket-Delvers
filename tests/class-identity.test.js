@@ -82,7 +82,7 @@ test('Rogue gets two starter dice, all die types cap at four, and can earn a fou
   const s=arena('rogue',4),r=s.run,c=r.combat;
   assert.equal(c.dice.length,2);
   r.diceLoadout.push('stride');
-  r.depth=5; enter(s,'battle');
+  r.depth=5; r.oath='shade'; enter(s,'battle');
   assert.ok(s.run.combat.dice.every(v=>v.value<=4));
   for(let i=0;i<100;i++){
     s.run.combat.focus=1;
@@ -185,7 +185,7 @@ test('v0.4 save migration preserves a chosen legacy blueprint and all existing d
   s.run.diceLoadout=['standard','stride','moon','knives'];
   s.run.combat.dice=s.run.diceLoadout.map((kind,id)=>({id,kind,value:6,used:false}));
   const next=restore(s);
-  assert.equal(next.version,5);
+  assert.equal(next.version,6);
   assert.equal(next.meta.starters.rogue,'moon');
   assert.equal(next.run.diceLoadout.length,4);
   assert.ok(next.run.combat.dice.every(v=>v.value===4));

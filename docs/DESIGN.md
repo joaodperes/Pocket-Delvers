@@ -1,4 +1,8 @@
-# Class economies & roguelite run identity — v0.5 design notes
+# Class economies & roguelite run identity — design history
+
+> **Current implementation: v0.6.** The class economies below originated in v0.5 and remain the foundation. For the *new* mutually exclusive Paths, creature behaviors, trade-off costs and balance procedure, read [RUN_PATHS.md](RUN_PATHS.md). This file preserves the v0.5 baseline so future balance changes can be compared rather than silently rewriting the design rationale.
+
+## v0.5 baseline
 
 This is the working design rationale, not a declaration that balancing is finished. The aim is to make choices *different*, not give each new item a bigger number.
 
@@ -42,15 +46,15 @@ These are per-die raw direct damage averages, not win-rate estimates; misses due
 - Are actions and statistics understandable on a 390px phone with four Rogue dice? Use the backpack for full explanations, not microscopic in-game text.
 - Check real iPhone touch behavior and animations; desktop headless tests do not replace on-device playtesting.
 
-## Possible later experiments (not implemented)
+## Earlier proposed experiments and current status
 
-- Enemy types that punish excessive Charge hoarding or repeated Guard, but are visibly telegraphed.
-- One optional, mutually exclusive relic-alignment choice per run rather than allowing every powerful relic to stack.
+- **Partly implemented v0.6:** Cinder Seers use tracking Hex Drain, which removes one Charge only when their attack penetrates Guard; Gloom Hounds announce dodgeable Pounce attacks and sprint three tiles. Neither directly punishes Charge hoarding or repeated Guard.
+- **Implemented as class Paths in v0.6:** one mutually exclusive, run-only Path choice after room 2. It does not occupy a relic slot and does not prevent future relic drops.
 - Biomes with distinct enemy decks and meaningful branching routes.
 - Metaprogression that unlocks **choices** (new dice/sidegrade relics), not unconditional starting damage or free action count.
 - Seeded daily runs and balance telemetry in a local-only test harness, without requiring a server.
 
-No additional permanent currencies or character stat trees are part of v0.5: the depth comes from different dice, constraints and enemy counterplay.
+No additional permanent currencies or character stat trees are part of v0.5 or v0.6: the depth comes from different dice, constraints and enemy counterplay.
 
 ## Automated balance probe (directional, not human win rates)
 
