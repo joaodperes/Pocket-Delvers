@@ -35,14 +35,15 @@ Open `http://localhost:5173` in your browser. (The `npm run dev` script also sta
 
 ## Publishing on GitHub Pages
 
-1. Create a new **public** repository, e.g. `pocket-delvers`, under your GitHub account.
-2. Upload all files from this project to the root of the repository, including `assets/` and `sw.js`.
-3. Keep your deployable game on `main`; use a `dev` branch and pull requests for changes. An included GitHub Action runs the automated rules tests.
-4. In **Settings → Pages**, under **Build and deployment**, select **Deploy from a branch**, branch `main`, folder `/ (root)`, and save.
-5. Once GitHub publishes, visit `https://YOUR-USERNAME.github.io/pocket-delvers/` (replace the username/repo name as appropriate).
-6. On iPhone, in Safari: **Share → Add to Home Screen**. You can then launch the game in standalone mode. After the first successful visit, the service worker can serve the app while offline.
+The source is already committed to [joaodperes/Pocket-Delvers](https://github.com/joaodperes/Pocket-Delvers). The deployable game lives on `main`; future changes should be developed on `dev` and merged through pull requests.
 
-Relative paths mean the game works at either a GitHub Pages subpath or site root. There is no compilation or server-side configuration.
+**One-time setup:** In the repository open **Settings → Pages**. Under **Build and deployment**, choose **Deploy from a branch**, select **main** and **/ (root)**, then click **Save**.
+
+After GitHub Pages finishes publishing, the game should be available at **https://joaodperes.github.io/Pocket-Delvers/**. This URL only works after Pages is enabled and deployment succeeds. Subsequent pushes to `main` will republish automatically; pushes to `dev` will not.
+
+On iPhone, open the site in Safari and tap **Share → Add to Home Screen**. After the initial successful visit, the service worker can make the game available offline. Saves are local to each browser; use JSON export/import to move progress.
+
+The included GitHub Action `.github/workflows/check.yml` runs syntax and game-rule tests on updates to `main`, `dev`, and pull requests.
 
 ## Tests
 
