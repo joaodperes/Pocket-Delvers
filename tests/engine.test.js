@@ -1,22 +1,78 @@
-import test from 'node:test';import assert from 'node:assert/strict';
-import {fresh,start,setAction,targets,act,setDie,endTurn,potion,choose,enter,buy,leaveShop,pause,resume,restore,unlocked} from '../engine.js';
-test('Creating a hero rolls three dice and telegraphs attacks',()=>{const s=fresh();assert.ok(start(s,'guardian'));assert.equal(s.phase,'combat');assert.equal(s.run.combat.dice.length,3);assert.ok(s.run.combat.enemies.every(e=>e.intent));});
-test('Guard consumes a die',()=>{const s=fresh();start(s,'guardian');setAction(s,'guard');assert.ok(act(s));assert.equal(s.run.combat.dice.filter(x=>x.used).length,1);assert.equal(setDie(s,0),false);});
-test('Moving avoids a telegraphed ranged hit',()=>{const s=fresh();start(s,'ranger');const c=s.run.combat;c.rocks=[];c.player={x:2,y:4};c.enemies=[{id:'a',type:'archer',x:2,y:2,hp:8,maxHp:8,damage:4,stun:0,intent:{type:'attack',name:'SHOOT',targets:[{x:2,y:4}]}}];c.dice=[{id:0,value:6,used:false},{id:1,value:2,used:false},{id:2,value:3,used:false}];assert.ok(targets(s).some(t=>t.x===1&&t.y===4));act(s,{x:1,y:4});const hp=s.run.hp;endTurn(s);assert.equal(s.run.hp,hp);});
-test('Last enemy triggers loot, route, then room two',()=>{const s=fresh();start(s,'guardian');const c=s.run.combat;c.rocks=[];c.player={x:2,y:4};c.enemies=[{id:'x',type:'slime',x:2,y:3,hp:1,maxHp:8,damage:3,stun:0,intent:{type:'attack',name:'STRIKE',targets:[{x:2,y:4}]}}];setAction(s,'strike');act(s,{x:2,y:3});assert.equal(s.phase,'reward');assert.equal(s.meta.shards,2);choose(s,s.run.choices[0].id);assert.equal(s.phase,'path');});
-test('Potion does not consume dice',()=>{const s=fresh();start(s,'guardian');s.run.hp-=15;assert.ok(potion(s));assert.equal(s.run.potions,1);assert.equal(s.run.combat.dice.filter(x=>x.used).length,0);});
-test('Rogue unlocks with shards',()=>{const s=fresh();assert.equal(unlocked(s,'rogue'),false);s.meta.shards=40;assert.ok(start(s,'rogue'));});
-test('Merchant purchases gold upgrades',()=>{const s=fresh();start(s,'guardian');s.run.depth=8;s.run.gold=30;enter(s,'merchant');assert.equal(s.phase,'shop');assert.ok(buy(s,'forge'));assert.equal(s.run.gold,15);assert.ok(leaveShop(s));assert.equal(s.phase,'path');});
-test('Paused combat round-trips through save file',()=>{const s=fresh();start(s,'arcanist');pause(s);let loaded=restore(JSON.parse(JSON.stringify(s)));assert.equal(loaded.phase,'home');assert.ok(resume(loaded));assert.equal(loaded.phase,'combat');});
-import {DICE_TYPES,actionPreview,incoming,reroll,equipDie,available} from '../engine.js';
-function trainingBattle(hero='guardian',value=2){const s=fresh();if(hero==='rogue')s.meta.shards=40;start(s,hero);const c=s.run.combat;c.rocks=[];c.player={x:2,y:4};c.enemies=[{id:'target',type:'skeleton',x:2,y:2,hp:50,maxHp:50,damage:4,stun:0,intent:{type:'attack',name:'STRIKE',targets:[{x:2,y:4}]}}];c.dice.forEach((v,i)=>{v.value=i===0?value:3;v.used=false;});c.selected=0;return s;}
-test('Every number increases movement range, including 1 versus 2',()=>{const s=trainingBattle('guardian',1);let t=targets(s);assert.ok(t.some(p=>p.x===1&&p.y===4));assert.ok(!t.some(p=>p.x===0&&p.y===4));s.run.combat.dice[0].value=2;t=targets(s);assert.ok(t.some(p=>p.x===0&&p.y===4));});
-test('Movement uses an open path and cannot pass through a blocked chokepoint',()=>{const s=trainingBattle('guardian',5);const c=s.run.combat;c.rocks=[{x:1,y:4},{x:3,y:4},{x:2,y:3}];assert.deepEqual(targets(s),[]);});
-test('Preview numbers match actual guard and strike values',()=>{const s=trainingBattle('guardian',4);s.run.relics.push('ward','parity');const c=s.run.combat;assert.equal(actionPreview(s).guard,4+1+2+2);assert.equal(actionPreview(s).strike,2+2+2);setAction(s,'guard');act(s);assert.equal(c.shield,9);});
-test('Guardian special stuns, while Ranger aimed shot gains damage at six',()=>{const s=trainingBattle('guardian',6),c=s.run.combat;c.enemies[0].y=3;setAction(s,'skill');const dmg=actionPreview(s).skill;act(s,{x:2,y:3});assert.equal(c.enemies[0].hp,50-dmg);assert.equal(c.enemies[0].stun,1);const ranger=trainingBattle('ranger',6);assert.equal(actionPreview(ranger).skill,11);});
-test('Incoming damage reflects guard and whether attack still targets player',()=>{const s=trainingBattle();const c=s.run.combat;c.shield=2;assert.deepEqual(incoming(s),{total:4,blocked:2,hpLoss:2});c.player.x=1;assert.deepEqual(incoming(s),{total:0,blocked:0,hpLoss:0});});
-test('Reroll never spends an action die and uses face distribution of custom die',()=>{const s=trainingBattle();const c=s.run.combat;c.dice[0].kind='evenstone';c.focus=1;assert.ok(reroll(s,0));assert.ok([2,4,6].includes(c.dice[0].value));assert.equal(c.focus,0);assert.equal(available(c),3);assert.ok(reroll(s,0));assert.equal(s.run.tonics,0);assert.equal(reroll(s,0),false);});
-test('Rogue free reroll and Mirror focus work each round',()=>{const s=trainingBattle('rogue',2),c=s.run.combat;c.focus=0;s.run.tonics=0;assert.ok(reroll(s));assert.equal(c.trickUsed,true);assert.equal(reroll(s),false);s.run.relics.push('mirror');endTurn(s);assert.equal(c.focus,2);assert.equal(c.trickUsed,false);});
-test('Elite grants persistent even die, final boss grants Twin Six',()=>{const s=trainingBattle();const c=s.run.combat;c.enemies[0].y=3;c.enemies[0].hp=1;s.run.kind='elite';setAction(s,'strike');act(s,{x:2,y:3});assert.ok(s.meta.blueprints.includes('evenstone'));assert.equal(s.run.newBlueprint,'evenstone');s.phase='home';s.run=null;assert.ok(equipDie(s,1,'evenstone'));assert.deepEqual(s.meta.equipped,['standard','evenstone','standard']);assert.ok(start(s,'guardian'));assert.equal(s.run.combat.dice[1].kind,'evenstone');const c2=s.run.combat;c2.rocks=[];c2.enemies=[{id:'boss',type:'boss',x:2,y:3,hp:1,maxHp:49,damage:7,stun:0,intent:{type:'attack',name:'SMASH',targets:[{x:2,y:4}]}}];s.run.kind='boss';setAction(s,'strike');act(s,{x:2,y:3});assert.equal(s.phase,'victory');assert.ok(s.meta.blueprints.includes('twinsix'));assert.deepEqual(DICE_TYPES.twinsix.faces,[2,3,4,5,6,6]);});
-test('Relics and dice types create even/odd conditional damage synergies',()=>{const s=trainingBattle('guardian',4);s.run.combat.dice[0].kind='evenstone';const before=actionPreview(s).guard;assert.equal(before,4+1+2+2);s.run.relics.push('parity');assert.equal(actionPreview(s).strike,2+2+2);s.run.combat.dice[0].kind='moon';s.run.combat.dice[0].value=5;assert.equal(actionPreview(s).strike,2+3+2);s.run.relics.push('oddwood');assert.equal(actionPreview(s).skill,1+5+1+2);});
-test('Existing v1 saves load and retroactively award boss dice to past winners',()=>{const raw=fresh();raw.version=1;raw.meta.wins=1;start(raw,'guardian');delete raw.meta.blueprints;delete raw.meta.equipped;delete raw.run.tonics;delete raw.run.diceLoadout;delete raw.run.combat.focus;raw.run.combat.dice.forEach(d=>delete d.kind);const loaded=restore(raw);assert.equal(loaded.version,2);assert.ok(loaded.meta.blueprints.includes('twinsix'));assert.deepEqual(loaded.run.diceLoadout,['standard','standard','standard']);assert.equal(loaded.run.tonics,1);assert.equal(loaded.run.combat.dice[0].kind,'standard');});
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {fresh,start,setAction,targets,act,setDie,endTurn,potion,choose,enter,buy,leaveShop,pause,resume,restore,unlocked,actionPreview,damageAgainst,incoming,reroll,equipDie,available,DICE_TYPES,HEROES,SKILL_COST,MAX_CHARGE,ENEMIES} from '../engine.js';
+
+function trainingBattle(hero='guardian',value=4,type='skeleton'){
+ const s=fresh();s.meta.heroes.push(hero);assert.ok(start(s,hero));const c=s.run.combat;c.rocks=[];c.player={x:2,y:4};
+ c.enemies=[{id:'target',type,x:2,y:3,hp:50,maxHp:50,damage:4,stun:0,bleed:0,bleedTurns:0,intent:{type:'attack',name:'STRIKE',targets:[{x:2,y:4}]}}];
+ c.dice.forEach((v,i)=>{v.value=i===0?value:3;v.used=false;});c.selected=0;return s;
+}
+const target={x:2,y:3};
+test('New saves start with Guardian only, other heroes unlock with separate milestones',()=>{
+ const s=fresh();assert.deepEqual(s.meta.heroes,['guardian']);assert.ok(start(s,'guardian'));assert.equal(unlocked(s,'ranger'),false);s.run.depth=3;enter(s,'battle');assert.equal(unlocked(s,'ranger'),true);assert.equal(unlocked(s,'arcanist'),false);assert.equal(unlocked(s,'rogue'),false);
+});
+test('Ranger, Arcanist and Rogue unlock in milestone order without shard grinding',()=>{
+ const s=trainingBattle();s.meta.best=3;s.meta.elites=1;s.meta.wins=1;const restored=restore(s);for(const hero of ['guardian','ranger','arcanist','rogue'])assert.ok(unlocked(restored,hero));
+});
+test('Combat starts with three dice, one Charge and readable enemy intentions',()=>{const s=fresh();start(s,'guardian');assert.equal(s.phase,'combat');assert.equal(s.run.combat.dice.length,3);assert.equal(s.run.combat.charge,1);assert.ok(s.run.combat.enemies.every(e=>e.intent));});
+test('Dice values are exact movement path length',()=>{
+ const s=trainingBattle('guardian',1),c=s.run.combat;c.enemies=[{...c.enemies[0],x:2,y:2}];let t=targets(s);assert.ok(t.some(p=>p.x===1&&p.y===4));assert.ok(!t.some(p=>p.x===0&&p.y===4));c.dice[0].value=2;t=targets(s);assert.ok(t.some(p=>p.x===0&&p.y===4));
+});
+test('Movement cannot pass through blocked corridors',()=>{const s=trainingBattle('guardian',5),c=s.run.combat;c.rocks=[{x:1,y:4},{x:3,y:4},{x:2,y:3}];c.enemies[0].y=1;assert.deepEqual(targets(s),[]);});
+test('Skills require both a 3+ die and 2 Charge; failed casts use no die',()=>{
+ const s=trainingBattle('guardian',4),c=s.run.combat;setAction(s,'skill');assert.equal(SKILL_COST,2);assert.equal(actionPreview(s).skillReady,false);assert.deepEqual(targets(s),[]);assert.equal(act(s,target),false);assert.equal(c.dice[0].used,false);assert.match(s.message,/2 Charge/);c.charge=2;c.dice[0].value=2;assert.equal(actionPreview(s).skillReady,false);c.dice[0].value=3;assert.equal(actionPreview(s).skillReady,true);
+});
+test('A normal Strike generates Charge and uses exact post-armor damage',()=>{
+ const s=trainingBattle('guardian',4),c=s.run.combat,e=c.enemies[0];const actual=damageAgainst(s,e,'strike');assert.equal(actual,actionPreview(s).strike-ENEMIES.skeleton.armor);setAction(s,'strike');assert.ok(act(s,target));assert.equal(e.hp,50-actual);assert.equal(c.charge,2);assert.equal(c.dice[0].used,true);
+});
+test('Guard generates Charge, previews exact shield, and caps Charge at four',()=>{
+ const s=trainingBattle('guardian',2),c=s.run.combat;c.charge=MAX_CHARGE-1;setAction(s,'guard');const shield=actionPreview(s).guard;assert.ok(act(s));assert.equal(c.shield,shield);assert.equal(c.charge,MAX_CHARGE);
+});
+test('Spending a skill consumes two Charge and Shield Bash stuns',()=>{
+ const s=trainingBattle('guardian',6),c=s.run.combat,e=c.enemies[0];c.charge=3;setAction(s,'skill');const hp=damageAgainst(s,e,'skill');assert.ok(act(s,target));assert.equal(c.charge,1);assert.equal(e.stun,1);assert.equal(e.hp,50-hp);
+});
+test('Guardian normally strikes harder than their control-focused special',()=>{const s=trainingBattle('guardian',4,'slime');s.run.combat.charge=2;const e=s.run.combat.enemies[0];assert.ok(damageAgainst(s,e,'strike')>damageAgainst(s,e,'skill'));});
+test('Ranger physical attacks have range three and Aimed Shot pierces armor',()=>{
+ const s=trainingBattle('ranger',6),c=s.run.combat,e=c.enemies[0];e.y=1;setAction(s,'strike');assert.ok(targets(s).some(p=>p.x===2&&p.y===1));e.y=2;c.charge=2;setAction(s,'skill');assert.equal(damageAgainst(s,e,'skill'),actionPreview(s).skill);assert.ok(damageAgainst(s,e,'strike')<actionPreview(s).strike);
+});
+test('Arcanist deals arcane attacks, has range three, and chains adjacent enemies',()=>{
+ const s=trainingBattle('arcanist',4),c=s.run.combat,e=c.enemies[0];c.charge=2;const secondary={...e,id:'other',x:3,y:3,hp:50,maxHp:50};c.enemies.push(secondary);assert.equal(actionPreview(s).strikeType,'arcane');setAction(s,'skill');assert.ok(act(s,target));assert.ok(e.hp<50);assert.ok(secondary.hp<50);assert.equal(c.charge,0);
+});
+test('Rogue odd Strikes apply 2 turns of Bleed; even rolls do not',()=>{
+ const s=trainingBattle('rogue',3),c=s.run.combat,e=c.enemies[0];setAction(s,'strike');act(s,target);assert.equal(e.bleed,1);assert.equal(e.bleedTurns,2);const before=e.hp;endTurn(s);assert.equal(e.hp,before-1);
+});
+test('Class synergies change decisions: low-roll guard with Bastion and Gravebone',()=>{
+ const s=trainingBattle('guardian',1),c=s.run.combat;s.run.relics.push('bastion');c.dice[0].kind='gravebone';setAction(s,'guard');assert.ok(actionPreview(s).guard>5);act(s);assert.equal(c.charge,4);
+});
+test('Monster armor/ward makes damage types matter without hiding numbers',()=>{
+ const a=trainingBattle('arcanist',4,'skeleton'),b=trainingBattle('guardian',4,'skeleton');const ea=a.run.combat.enemies[0],eb=b.run.combat.enemies[0];assert.equal(damageAgainst(a,ea,'strike'),actionPreview(a).strike);assert.equal(damageAgainst(b,eb,'strike'),actionPreview(b).strike-2);
+});
+test('Enemy loot includes a monster-specific relic alongside choices',()=>{
+ const s=trainingBattle('guardian',5,'slime'),c=s.run.combat;c.enemies[0].hp=1;setAction(s,'strike');act(s,target);assert.equal(s.phase,'reward');assert.equal(s.run.choices.length,3);assert.ok(s.run.choices.some(x=>x.id==='mire'));choose(s,'mire');assert.ok(s.run.relics.includes('mire'));
+});
+test('Healing potions preserve dice and enemy intents',()=>{const s=trainingBattle();s.run.hp-=15;assert.ok(potion(s));assert.equal(s.run.potions,1);assert.equal(available(s.run.combat),3);});
+test('Reroll uses actual custom-die faces, does not spend the die',()=>{
+ const s=trainingBattle(),c=s.run.combat;c.dice[0].kind='evenstone';assert.ok(reroll(s,0));assert.ok(DICE_TYPES.evenstone.faces.includes(c.dice[0].value));assert.equal(c.focus,0);assert.equal(available(c),3);assert.ok(reroll(s,0));assert.equal(s.run.tonics,0);assert.equal(reroll(s,0),false);
+});
+test('Rogue free reroll and Mirror add per-round rerolls',()=>{
+ const s=trainingBattle('rogue'),c=s.run.combat;c.focus=0;s.run.tonics=0;assert.ok(reroll(s));assert.equal(c.trickUsed,true);s.run.relics.push('mirror');endTurn(s);assert.equal(c.focus,2);assert.equal(c.trickUsed,false);
+});
+test('Reroll and dice distributions are not unconditionally stronger',()=>{
+ assert.ok(!DICE_TYPES.gravebone.faces.includes(4));assert.equal(DICE_TYPES.gravebone.faces.filter(n=>n===6).length,1);assert.equal(DICE_TYPES.gravebone.faces.filter(n=>n===3).length,2);assert.equal(DICE_TYPES.evenstone.faces.includes(1),true);
+});
+test('Gravebone face six refunds 1 Charge on skill',()=>{const s=trainingBattle('guardian',6),c=s.run.combat;c.dice[0].kind='gravebone';c.charge=2;setAction(s,'skill');act(s,target);assert.equal(c.charge,1);});
+test('Elite permanently unlocks a die and Arcanist, boss unlocks Gravebone and Rogue',()=>{
+ const s=trainingBattle('guardian',4),c=s.run.combat;s.run.kind='elite';c.enemies[0].hp=1;setAction(s,'strike');act(s,target);assert.equal(s.phase,'reward');assert.ok(s.meta.blueprints.includes('evenstone'));assert.ok(unlocked(s,'arcanist'));
+ s.phase='home';s.run=null;assert.ok(equipDie(s,1,'evenstone'));assert.ok(start(s,'guardian'));const b=s.run.combat;b.rocks=[];b.enemies=[{id:'boss',type:'boss',x:2,y:3,hp:1,maxHp:49,damage:7,stun:0,intent:{type:'attack',name:'SMASH',targets:[{x:2,y:4}]}}];s.run.kind='boss';setAction(s,'strike');act(s,target);assert.equal(s.phase,'victory');assert.ok(unlocked(s,'rogue'));assert.ok(s.meta.blueprints.includes('gravebone'));
+});
+test('v0.2 save migrates to v0.3 preserving access to original heroes and old boss die',()=>{
+ const old=trainingBattle();old.version=2;old.meta.blueprints=['standard','twinsix'];old.meta.equipped=['twinsix','standard','standard'];old.meta.wins=1;old.meta.best=10;old.run.diceLoadout=['twinsix','standard','standard'];old.run.combat.dice[0].kind='twinsix';delete old.run.combat.charge;delete old.meta.heroes;const s=restore(JSON.parse(JSON.stringify(old)));assert.equal(s.version,3);assert.ok(s.meta.blueprints.includes('gravebone'));assert.equal(s.meta.equipped[0],'gravebone');assert.equal(s.run.combat.dice[0].kind,'gravebone');assert.equal(s.run.combat.charge,1);for(const id of Object.keys(HEROES))assert.ok(unlocked(s,id));
+});
+test('v0.1 save without custom dice still loads and never loses older hero access',()=>{
+ const old=trainingBattle();old.version=1;delete old.meta.blueprints;delete old.meta.equipped;delete old.meta.heroes;delete old.run.diceLoadout;delete old.run.tonics;delete old.run.combat.focus;delete old.run.combat.charge;old.run.combat.dice.forEach(d=>delete d.kind);const s=restore(old);assert.equal(s.version,3);assert.equal(s.run.combat.dice[0].kind,'standard');assert.equal(s.run.combat.charge,1);assert.ok(unlocked(s,'arcanist'));assert.ok(unlocked(s,'ranger'));
+});
+test('Player can pause and resume mid-combat with active Charge and remaining dice',()=>{
+ const s=trainingBattle();s.run.combat.charge=3;assert.ok(pause(s));const r=restore(JSON.parse(JSON.stringify(s)));assert.equal(r.phase,'home');assert.ok(resume(r));assert.equal(r.phase,'combat');assert.equal(r.run.combat.charge,3);
+});
+test('Merchant purchases upgrades for gold and continues progression',()=>{const s=trainingBattle();s.run.depth=8;s.run.gold=30;enter(s,'merchant');assert.ok(buy(s,'forge'));assert.equal(s.run.gold,15);assert.ok(leaveShop(s));assert.equal(s.phase,'path');});
+test('Incoming damage considers planned attack tiles and current shield',()=>{const s=trainingBattle(),c=s.run.combat;c.shield=2;assert.deepEqual(incoming(s),{total:4,blocked:2,hpLoss:2});c.player.x=1;assert.deepEqual(incoming(s),{total:0,blocked:0,hpLoss:0});});

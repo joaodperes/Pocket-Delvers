@@ -14,3 +14,36 @@
 @keyframes dice-tumble{0%{transform:translateY(-21px) rotate(-35deg) scale(.72);opacity:.5}45%{transform:translateY(7px) rotate(13deg) scale(1.08);opacity:1}75%{transform:translateY(-5px) rotate(-5deg)}100%{transform:translateY(0) rotate(0) scale(1)}}.die.dice-rolling .face{animation:dice-tumble .56s cubic-bezier(.15,.72,.25,1) both}.unlocked-die{padding:12px;color:#e5d6a6;border:1px solid #a28345;background:#3d3640;border-radius:10px;font-size:13px;line-height:1.45}.inventory-modal{width:min(570px,100%)}.pack-section{border:1px solid #3f5066;background:#19283a;border-radius:10px;padding:12px 13px;margin-bottom:9px}.pack-section h3{font-family:Georgia,serif;margin:0 0 8px;font-size:17px;color:#e1bd87}.pack-section p{font-size:12px;margin:6px 0;color:#bdc9d6}.pack-section strong{color:#e6ecf1}.enemy-profile{height:100px;margin:4px auto 16px;display:grid;place-items:center}.enemy-profile img{width:100px;height:100px}
 @media(max-width:600px){.die-loadout{grid-template-columns:1fr;gap:7px}.die-collection{grid-template-columns:1fr}.loadout-slot{padding:10px;gap:5px}.loadout-slot small{font-size:10px}.threat-summary{margin-bottom:8px;padding:8px;font-size:10px}.threat-summary b{font-size:11px}.threat-summary span{font-size:10px}.enemy-roster summary{font-size:10px;padding:9px}.enemy-row{min-height:43px}.enemy-copy strong{font-size:11px}.enemy-copy>span{font-size:9px}.game-shell{padding-bottom:298px}.controls-head{display:flex;margin-bottom:4px}.controls-label{display:none}.reroll-bar{margin:-1px 0 7px;padding:3px 0 5px}.reroll-bar>span{font-size:9px}.reroll-button{padding:5px;min-height:29px;font-size:11px}.reroll-button b{font-size:8px}.dice{margin-bottom:6px}.die{min-width:58px}.die small{font-size:7px}.action{min-height:51px;font-size:10px}.action small{font-size:9px}.action-info{display:block;margin:6px 0;padding:5px 7px;min-height:0;max-height:38px;overflow-y:auto;line-height:1.25;font-size:10px}.confirm-guard{padding:6px;margin:3px 0}.controls .control-foot{margin-top:5px}.inventory-link{font-size:10px}.hero-passive{font-size:9px!important}}
 @media(prefers-reduced-motion:reduce){.die.dice-rolling .face{animation:none}}
+
+/* v0.3 — combat readability and feedback. Every effect is visual-only. */
+.charge-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#1b2938;border:1px solid #506179;border-radius:10px;padding:8px 10px;margin:4px 0 10px;color:#f1dca8;font-size:12px}
+.charge-bar strong{font-weight:750;white-space:nowrap}
+.charge-bar>span{display:flex;gap:4px;flex:1;max-width:116px}
+.charge-bar i{display:block;flex:1;height:11px;border-radius:3px;background:#3b485b;box-shadow:inset 0 0 0 1px #52627a}
+.charge-bar i.full{background:linear-gradient(135deg,#f4da93,#dd975a);box-shadow:0 0 9px #f1bd5a40}
+.charge-bar small{font-size:10px;color:#d2bd9e;white-space:nowrap}
+.damage-preview{position:absolute;right:-3px;top:-4px;min-width:26px;height:24px;z-index:5;display:grid;place-items:center;padding:0 4px;border-radius:8px;background:#311e2b;border:1px solid #f09b90;color:#ffdfdb;font-size:12px;font-weight:900;box-shadow:0 3px 10px #0b0b15a0;pointer-events:none}
+.relic-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;color:#e6c594;font-size:9px;line-height:1.5}
+.relic-tags i{font-style:normal;border:1px solid #7d6855;border-radius:5px;padding:1px 5px;background:#3c3041}
+.relic-mini-tags{color:#cba36b}
+.combat-fx{position:fixed;z-index:9999;pointer-events:none;transform:translate(-50%,-50%);padding:5px 8px;border-radius:9px;color:#fff1db;background:#301d2ad9;border:1px solid #f5a8a4;font-size:21px;font-weight:950;white-space:nowrap;text-shadow:0 2px 4px #000;box-shadow:0 0 26px #b96d6b66;animation:fx-strike .85s ease-out forwards}
+.combat-fx::before{content:'';position:absolute;inset:-9px;border:3px solid currentColor;border-radius:50%;opacity:.6;animation:fx-ring .6s ease-out forwards}
+.combat-fx-guardian{color:#cfeefc;background:#1d4050f0;border-color:#b1d6ef;animation-name:fx-bash}
+.combat-fx-arcanist{color:#ddbdff;background:#38204de8;border-color:#c08eff;animation-name:fx-arcane}
+.combat-fx-ranger{color:#e8f5c8;background:#29452ee8;border-color:#cce69e;animation-name:fx-ranger}
+.combat-fx-rogue{color:#f1c2ed;background:#452842e8;border-color:#e69ee7;animation-name:fx-rogue}
+.combat-fx-guard{color:#a6e6f7;background:#1e3e52ed;border-color:#70e2fa;animation-name:fx-guard}
+.combat-fx-hurt{color:#fff0e7;background:#802a36ed;border-color:#ff798b;animation-name:fx-hurt}
+.combat-fx-move{color:#b1eed7;background:#1a5548b0;border-color:#99e4ca}
+@keyframes fx-strike{0%{opacity:0;transform:translate(-50%,-60%) rotate(-12deg) scale(.5)}20%{opacity:1;transform:translate(-50%,-50%) rotate(4deg) scale(1.25)}55%{opacity:1;transform:translate(-50%,-90%) scale(1)}100%{opacity:0;transform:translate(-50%,-150%) scale(.8)}}
+@keyframes fx-ring{from{opacity:1;transform:scale(.25)}to{opacity:0;transform:scale(2.1)}}
+@keyframes fx-bash{0%{opacity:0;transform:translate(-50%,-50%) scale(2)}22%{opacity:1;transform:translate(-50%,-50%) scale(.8)}50%{opacity:1;transform:translate(-50%,-85%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-145%) scale(.9)}}
+@keyframes fx-arcane{0%{opacity:0;filter:blur(8px);transform:translate(-50%,-50%) scale(.35) rotate(-25deg)}20%{opacity:1;filter:blur(0);transform:translate(-50%,-50%) scale(1.5) rotate(12deg)}65%{opacity:1;transform:translate(-50%,-110%) scale(1)}100%{opacity:0;transform:translate(-50%,-165%) scale(.85)}}
+@keyframes fx-ranger{0%{opacity:0;transform:translate(-100%,-50%) scale(.4)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.23)}100%{opacity:0;transform:translate(-50%,-165%) scale(.9)}}
+@keyframes fx-rogue{0%{opacity:0;transform:translate(-50%,-50%) scale(1.8)}35%{opacity:1;transform:translate(-50%,-50%) scale(.85)}100%{opacity:0;transform:translate(-50%,-155%) scale(.9)}}
+@keyframes fx-guard{0%{opacity:0;transform:translate(-50%,-50%) scale(.7)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}100%{opacity:0;transform:translate(-50%,-155%) scale(.8)}}
+@keyframes fx-hurt{0%,35%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}50%{transform:translate(-50%,-57%) scale(.96)}100%{opacity:0;transform:translate(-50%,-150%) scale(.8)}}
+@media(max-width:600px){.charge-bar{font-size:10px;padding:5px 6px;margin:3px 0 6px}.charge-bar>span{max-width:80px}.charge-bar small{font-size:9px}.damage-preview{font-size:10px;height:19px;min-width:20px}.combat-fx{font-size:16px;padding:3px 5px}}
+@media(prefers-reduced-motion:reduce){.combat-fx,.combat-fx::before{animation:none;display:none}}
+
+@media(max-width:600px){.game-shell{padding-bottom:345px}}

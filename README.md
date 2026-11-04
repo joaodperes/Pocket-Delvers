@@ -2,84 +2,87 @@
 
 **Three dice. One adventurer. One more room.**
 
-Pocket Delvers is a mobile-first, turn-based tactical dice roguelite made for GitHub Pages. It runs as a static browser game without a backend or paid hosting. Version **0.2** adds readable combat numbers, meaningful movement rolls, rerolls, custom dice, and a character pack.
+Pocket Delvers is an original, mobile-first, tactical dice roguelite that runs entirely in the browser. It needs no backend or runtime dependencies and supports GitHub Pages, offline installation, and local saves.
 
-## Play
+## Play (v0.3 development preview)
 
-1. At the guild, choose a hero and configure three dice in the **Dice Forge**. The default dice have faces `1,2,3,4,5,6`.
-2. During a fight, pick a die and an action. Buttons preview the **exact movement range, direct damage, or guard** for that die. Then tap a highlighted tile or enemy. Guard is confirmed separately. Each die can be spent once.
-3. **Movement:** a die showing N lets you move along a traversable path of **up to N tiles** (so a 1 moves 1, a 2 moves 2, and so on). You may stop early. The Windstrider Boots add +1. Walls and enemies block routes. Movement is orthogonal, not diagonal.
-4. **Strike:** adjacent only (Manhattan range 1); damage is `2 + ceil(die/2)` plus weapon bonuses and applicable relic/die synergies.
-5. **Guard:** grants `die + 1` shield plus applicable modifiers. The Guardian gets an extra +2. Shield absorbs incoming attack damage for the current round.
-6. **Specials:** require a **3+** die. See your hero's ability and exact expected direct damage on the button; chain damage, stun, displacement, or shielding are listed in ability descriptions. Tap enemies to inspect HP, damage, range and next action, or expand **Enemies** under the board.
-7. After you spend your dice (or choose **End turn**), enemies resolve their telegraphed attacks and advance. The danger summary shows incoming damage, damage blocked, and HP at risk *from attacks currently targeting your tile*.
-8. Reach room 10, collecting relics, gold and upgrades. Permanent die blueprints are unlocked by **elite encounters and bosses**, then equipped at the guild for future expeditions.
+1. Choose a hero from the guild. New players begin with **Guardian**, unlocking the **Ranger** by reaching room 3, **Arcanist** by defeating their first elite, and **Rogue** by defeating the final boss. Existing v0.1/v0.2 players retain previously available characters.
+2. Each round rolls three dice. Pick a die, pick an action, then tap an available tile or enemy. Spent dice are unavailable until the next round. **Move** goes up to the rolled number of traversable orthogonal tiles.
+3. **Strikes** deal reliable damage and generate **+1 Charge**. **Guard** adds shield until the end of the turn and generates **+1 Charge**. **Skills** require a die showing **3+** and spend **2 Charge**. Charge begins at 1 per encounter, persists between rounds, and caps at 4.
+4. Read enemy arrows/damage markers. Enemies announce the target of their next attack; moving, blocking, or stunning prevents damage. Expand the enemy roster or tap an enemy to inspect its attack and defenses.
+5. **Physical** damage is reduced by enemy **Armor**; **Arcane** damage by **Ward**. Both are flat reductions. The number on a valid target shows actual direct damage **after** resistances. Damage previews are recalculated for each selected die.
+6. Win fights, choose relics, collect equipment dropped by different monster types, unlock custom dice, and delve to room 10.
 
-### Heroes
+### Classes and reasons to choose them
 
-| Hero | HP | Special (die 3+) | Passive |
-| --- | ---: | --- | --- |
-| Guardian | 38 | Shield Bash: melee hit, +1 damage, stuns | Guard gains +2 shield |
-| Arcanist | 29 | Chain Bolt: range 3, half-damage chains to adjacent enemies | Multi-target lightning |
-| Ranger | 32 | Aimed Shot: range 4, +1 damage, +4 instead on 6 | Critical-roll specialist |
-| Rogue | 28 | Shadowstep: range 2, attack, reposition and gain 2 guard | One extra **free** reroll each round (unlock at 40 legacy shards or after winning) |
-
-Special direct damage before the hero modifier is `1 + die value`, plus training, relic and die-type bonuses. The detailed value displayed in combat is authoritative.
-
-### Rerolls and custom dice
-
-You get **1 reroll focus every round**, which rerolls a selected *unused* die without consuming it. The Rogue gets an additional free reroll every round. The **Twilight Mirror** adds +1 focus per round. When focus is depleted, a **Fortune Tonic** can be consumed to reroll a die; you start with one and can find or buy more.
-
-| Die | Faces | Synergy | Unlock |
+| Delver | Basic attack | Special (costs 2 Charge) | Identity |
 | --- | --- | --- | --- |
-| Adventurer Die | `1,2,3,4,5,6` | All numbers possible | Default |
-| Evenstone | `2,2,4,4,6,6` | An even roll grants +2 extra guard | First new elite blueprint |
-| Moonshard | `1,3,3,5,5,5` | An odd roll adds +2 strike damage | Later elite blueprint |
-| Twin Six | `2,3,4,5,6,6` | Two sixes and **no one** | First boss blueprint |
-| Stormglass | `1,2,3,4,5,6` | Rolls 4+ add +2 special damage | Later boss blueprint |
+| Guardian | Physical +1, range 1 | Shield Bash: melee damage and stun | Guard +2; low-die Guardian/Bastion combinations |
+| Ranger | Physical +1, range 3 | Aimed Shot: range 4, armor piercing, +2 on 6 | Ranged positioning, high-face rewards |
+| Arcanist | Arcane +2, range 3 | Chain Bolt: chain half damage to adjacent foes | Punishes armored targets, multi-hit Charge refunds |
+| Rogue | Physical +1, range 1 | Shadowstep: range 2, reposition and gain Guard | Odd rolls cause Bleed; free reroll each round |
 
-This is inspired by the *dice manipulation/odd–even equipment choice* design space seen in dice-focused roguelikes, but uses original rules and artwork. Relics such as **Evenbound Sigil** (+2 strike with even dice) and **Oddwood Charm** (+2 special with odd dice) create cross-die synergies. A custom die's face distribution is actually used for each roll and reroll, not merely displayed cosmetically. Duplicate unlocked dice may be equipped in multiple slots.
+Regular attacks are **not inferior skills**: strikes generate Charge, sometimes hit harder than specials (Guardian), and activate conditional effects on equipment. Skills cost Charge for a control, range, positioning, or multi-target payoff.
 
-### Inventory and enemy inspection
+### Loot that changes playstyle
 
-The **pack icon (♧)** in the header, or **View bonuses & inventory**, opens the character sheet showing class special/passive, strike and special upgrades, relic descriptions, equipped dice, healing potions, reroll tonics and current reroll focus. **Tap an enemy** or expand **ENEMIES** below the board to see its exact HP, damage, attack range and intent. All numbers reflect the current battle state.
+Each regular battle offers three choices. A monster you defeated can offer its specific drop alongside two other items. Relic cards show **synergy tags** such as `ARCANE`, `BLEED`, `RANGED`, `GUARD`, and `DICE`, with class-relevant cards highlighted.
 
-### Controls
+- **Mire Slime → Mire Catalyst:** odd Strikes add Bleed damage over the next two enemy turns.
+- **Boneguard → Boneguard Plating:** even Guard rolls give bonus shield.
+- **Ash Archer → Ashstring:** ranged Strikes from two or more tiles away hit harder.
+- **Hollow Brute → Hollow Grip:** Skills deal extra damage to adjacent enemies.
+- **Bastion Link:** a 1 or 2 becomes an excellent Guard roll and generates extra Charge.
+- **Ley Capacitor:** multi-target Skills can refund Charge.
+- **Hawkeye Wrap:** ranged Strikes on 5+ deal additional damage.
+- **Night Oil:** odd physical Strikes add Bleed.
 
-- **Mobile:** Tap die → action → highlighted tile/enemy. Guard uses a confirmation button. **Reroll** sits beside the active die. The action preview is visible above the bottom bar.
-- **Keyboard:** `1`, `2`, `3` choose dice; `M`, `S`, `G`, `E` actions; arrow keys move; Enter ends turn; Escape closes a panel.
-- Dice roll on screen entry and reroll with a short animation, honoring `prefers-reduced-motion`.
+Some relics still grant straightforward survival or damage improvements, intentionally providing approachable alternatives to synergy-focused builds. Monster drops are optional reward picks, never forced.
 
-## Local development
+### Custom dice and rerolls
 
-Requires Node.js 22+ only for tests; the site itself needs no dependencies. From the project root:
+Choose three unlocked dice at the guild. Every die has actual weighted faces and conditional mechanics, rather than an unconditional upgrade:
+
+| Die | Faces | Effect | Source |
+| --- | --- | --- | --- |
+| Adventurer | `1 2 3 4 5 6` | Balanced | Starting die |
+| Evenstone | `1 2 2 4 4 6` | Even Guard adds +2 | Elite |
+| Moonshard | `1 1 3 3 5 5` | Odd Strikes +1 damage | Elite |
+| Gravebone | `1 2 3 3 5 6` | Guard with 1 grants +2 Charge; Skill with 6 refunds 1 Charge | Boss |
+| Stormglass | `1 2 3 4 5 6` | Skills on 4+ deal +1 damage | Later boss |
+
+The v0.2 **Twin Six** blueprint is automatically migrated to **Gravebone**; permanent progression is not lost.
+
+Every character has one free die reroll per round, the Rogue gains a second, and Twilight Mirror and Fortune Tonics offer further rerolls. Rerolling never spends the die.
+
+### UI and effects
+
+Action buttons preview base damage, Guard, movement, and skill eligibility; attackable targets show damage after Armor/Ward. The character pack (♧) shows bonuses, class stats, relics, equipped dice, consumables, Charge, and reroll resources. Enemies show HP, armor, ward, Bleed, and announced actions.
+
+Dice have roll animations. **v0.3 adds distinct brief attack/skill impact flashes for each class, Guard and damage feedback**, honoring `prefers-reduced-motion`. These are short readable impact effects, not full frame-by-frame character sprite animations.
+
+### Saving / offline
+
+The game saves automatically to `localStorage`, with JSON export and import in Settings. Save files from v0.1 and v0.2 are migrated on load, with previous hero access preserved. Offline play uses a versioned service worker; new releases require an online visit to update cached assets.
+
+## Development
+
+The game itself has zero install or build dependencies. For checks, use Node.js 22+:
 
 ```bash
 npm run check
 npm run dev
 ```
 
-Open `http://localhost:5173`. The tests cover movement, damage previews, attack telegraphs, guard, classes, rerolls, equipped die distributions, elite/boss unlocks and legacy save migration.
+Then open <http://localhost:5173>. `npm run check` runs syntax checks and tests. The project is a static PWA with `index.html`, `app.js`, `engine.js`, `styles.css`, `assets/`, `manifest.webmanifest`, and `sw.js`.
 
-## GitHub Pages
+## Publish on GitHub Pages
 
-Production is published from **`main`** using **Settings → Pages → Build and deployment → Deploy from a branch → main / (root)**. New work is made on **`dev`** and reviewed in pull requests. Expected production URL: `https://joaodperes.github.io/Pocket-Delvers/` after the one-time Pages configuration.
-
-Install on iPhone via Safari → Share → Add to Home Screen. The service worker caches static assets after the first online load and updates its cache when the app version changes. Your game saves in your browser's `localStorage`; use **Settings → Export/Import** to back up or transfer progress. Version 0.2 automatically migrates saves from v0.1, and previous boss victories retroactively unlock their boss dice.
-
-## Project structure
-
-- `engine.js`: pure game rules, state, combat, progression, save migration.
-- `app.js`: touch UI, exact previews, inventory and enemy inspection, save/export/import.
-- `styles.css`: desktop and mobile layouts, dice roll animations.
-- `assets/`: original pixel sprites and app icons.
-- `manifest.webmanifest`, `sw.js`: installable offline PWA.
-- `tests/engine.test.js`: automated rules tests.
-- `.github/workflows/check.yml`: CI validation on `main`, `dev`, and PRs.
+Production comes from `main` with **Settings → Pages → Build and deployment → Deploy from a branch → main / (root)**. Development work goes into `dev` and is reviewed via pull request. The expected production address after Pages is enabled is <https://joaodperes.github.io/Pocket-Delvers/>.
 
 ## Status
 
-A playable **v0.2 prototype**, not yet a fully balanced game. Enemy variety, boss behaviors, combat pacing, deeper character-build systems and equipment constraints should be validated over more full expeditions.
+**v0.3 development branch**: deeper combat and loot prototype. Damage, enemy HP, rewards, and progression still need playtesting over complete expeditions; the underlying combat rules are unit-tested, but final balance is not guaranteed.
 
 ## License
 
