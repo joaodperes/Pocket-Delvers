@@ -1,15 +1,15 @@
 # Pocket Delvers
 
-**Three dice. One adventurer. One more room.**
+**Start with one die. Earn your next move. One more room.**
 
 Pocket Delvers is an original, mobile-first, tactical dice roguelite that runs entirely in the browser. It needs no backend or runtime dependencies and supports GitHub Pages, offline installation, and local saves.
 
-## Play (v0.3 development preview)
+## Play (v0.4 development preview)
 
 1. Choose a hero from the guild. New players begin with **Guardian**, unlocking the **Ranger** by reaching room 3, **Arcanist** by defeating their first elite, and **Rogue** by defeating the final boss. Existing v0.1/v0.2 players retain previously available characters.
-2. Each round rolls three dice. Pick a die, pick an action, then tap an available tile or enemy. Spent dice are unavailable until the next round. **Move** goes up to the rolled number of traversable orthogonal tiles.
+2. Start with one die. Your first victory offers three choices for a second die; subsequent battles, elites, and merchants can add a third. Some dice only allow specific actions. Pick a die, pick a permitted action, then tap an available tile or enemy. Spent dice are unavailable until the next round. **Move** goes up to the rolled number of traversable orthogonal tiles.
 3. **Strikes** deal reliable damage and generate **+1 Charge**. **Guard** adds shield until the end of the turn and generates **+1 Charge**. **Skills** require a die showing **3+** and spend **2 Charge**. Charge begins at 1 per encounter, persists between rounds, and caps at 4.
-4. Read enemy arrows/damage markers. Enemies announce the target of their next attack; moving, blocking, or stunning prevents damage. Expand the enemy roster or tap an enemy to inspect its attack and defenses.
+4. Read enemy arrows/damage markers. Melee enemies hunt two tiles each enemy turn. Ash Archers shoot TRACKING arrows whenever you stay within range and clear line of sight. Moving sideways is not enough: hide behind a wall, leave range, block, stun, or kill them. Fixed melee attacks still allow traditional dodging. Expand the enemy roster or tap an enemy to inspect its attack and defenses.
 5. **Physical** damage is reduced by enemy **Armor**; **Arcane** damage by **Ward**. Both are flat reductions. The number on a valid target shows actual direct damage **after** resistances. Damage previews are recalculated for each selected die.
 6. Win fights, choose relics, collect equipment dropped by different monster types, unlock custom dice, and delve to room 10.
 
@@ -41,7 +41,7 @@ Some relics still grant straightforward survival or damage improvements, intenti
 
 ### Custom dice and rerolls
 
-Choose three unlocked dice at the guild. Every die has actual weighted faces and conditional mechanics, rather than an unconditional upgrade:
+Select ONE permanent starting die at the guild. Collect a second and third die inside each expedition; all in-run extra dice reset after that expedition. Every die has actual weighted faces and conditional mechanics, rather than an unconditional upgrade:
 
 | Die | Faces | Effect | Source |
 | --- | --- | --- | --- |
@@ -50,6 +50,9 @@ Choose three unlocked dice at the guild. Every die has actual weighted faces and
 | Moonshard | `1 1 3 3 5 5` | Odd Strikes +1 damage | Elite |
 | Gravebone | `1 2 3 3 5 6` | Guard with 1 grants +2 Charge; Skill with 6 refunds 1 Charge | Boss |
 | Stormglass | `1 2 3 4 5 6` | Skills on 4+ deal +1 damage | Later boss |
+| Windstep | `3 4 4 5 6 6` | Only MOVE/GUARD; Guard +1 | Expedition |
+| Emberfang | `1 2 3 4 5 6` | Only STRIKE/GUARD; low Strikes +3 | Expedition |
+| Spellweave | `2 3 3 4 5 6` | Only SKILL/GUARD; Guard gives extra Charge | Expedition |
 
 The v0.2 **Twin Six** blueprint is automatically migrated to **Gravebone**; permanent progression is not lost.
 
@@ -59,11 +62,11 @@ Every character has one free die reroll per round, the Rogue gains a second, and
 
 Action buttons preview base damage, Guard, movement, and skill eligibility; attackable targets show damage after Armor/Ward. The character pack (♧) shows bonuses, class stats, relics, equipped dice, consumables, Charge, and reroll resources. Enemies show HP, armor, ward, Bleed, and announced actions.
 
-Dice have roll animations. **v0.3 adds distinct brief attack/skill impact flashes for each class, Guard and damage feedback**, honoring `prefers-reduced-motion`. These are short readable impact effects, not full frame-by-frame character sprite animations.
+Dice have roll animations. **v0.4 adds moving weapon / spell projectiles, target-flinch effects and visible enemy attacks**, in addition to class-specific impact flashes, Guard and damage feedback, honoring `prefers-reduced-motion`. These are short readable impact effects, not full frame-by-frame character sprite animations.
 
 ### Saving / offline
 
-The game saves automatically to `localStorage`, with JSON export and import in Settings. Save files from v0.1 and v0.2 are migrated on load, with previous hero access preserved. Offline play uses a versioned service worker; new releases require an online visit to update cached assets.
+The game saves automatically to `localStorage`, with JSON export and import in Settings. Save files from v0.1, v0.2, and v0.3 are migrated on load, with previous hero access preserved. Offline play uses a versioned service worker; new releases require an online visit to update cached assets.
 
 ## Development
 
@@ -82,8 +85,19 @@ Production comes from `main` with **Settings → Pages → Build and deployment 
 
 ## Status
 
-**v0.3 development branch**: deeper combat and loot prototype. Damage, enemy HP, rewards, and progression still need playtesting over complete expeditions; the underlying combat rules are unit-tested, but final balance is not guaranteed.
+**v0.4 development branch**: one-die expeditions, tactical enemy pressure, specialized dice and visible attack animations. Damage, enemy HP, rewards, and progression still need playtesting over complete expeditions; the underlying combat rules are unit-tested, but final balance is not guaranteed.
 
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+### v0.4 design and difficulty notes
+
+- **Start weak, build power:** every new run starts with only your chosen first die. Your first defeated room guarantees a choice of second die; later rewards can offer a third. The goal is to create distinct builds and harder early-game decisions without increasing the number of interface controls.
+- **Dice have tradeoffs:** Windstep's high movement/Guard rolls cannot be spent on attacking; Emberfang cannot Move or cast; Spellweave cannot Move or Strike. Disabled actions are visually indicated.
+- **Enemies close gaps:** melee enemies hunt up to two tiles each enemy turn and route around walls. Archers are guaranteed in standard encounters from room 2, use tracking shots when the hero is within line of sight and range, and reposition when obstructed. The boss gains an alternating tracking projectile on even turns.
+- **Honest threat display:** tracking targets are not fixed squares. Movement options with `!` are still exposed to a tracking shot. Guard/cover/range remain useful counterplay.
+- **Motion:** actual projectile travel, class-colored impacts, enemy missile effects and hit reactions; reduced-motion preference remains supported.
+- **Old runs:** saves in progress with three dice keep their existing loadout so an update does not remove earned progress mid-encounter.
+
+Difficulty has automated mechanics tests but still needs real run-by-run tuning of damage, healing and reward frequencies.
