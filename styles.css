@@ -47,3 +47,15 @@
 @media(prefers-reduced-motion:reduce){.combat-fx,.combat-fx::before{animation:none;display:none}}
 
 @media(max-width:600px){.game-shell{padding-bottom:345px}}
+
+/* v0.4 enemy targeting and readable combat motion */
+.tracked-tile .tracked-mark{position:absolute;z-index:6;top:1px;left:1px;width:15px;height:15px;border-radius:50%;background:#e89d55;color:#261f1a;display:grid;place-items:center;font-size:11px;font-weight:900;box-shadow:0 0 0 1px #492517;pointer-events:none}
+.tracked-tile .valid-outline{box-shadow:inset 0 0 0 2px #e89d55!important}
+.action:disabled{opacity:.32;filter:grayscale(1);cursor:not-allowed;border-style:dashed}
+.battle-projectile{position:fixed;left:0;top:0;z-index:9997;pointer-events:none;color:#ffdaa5;font-size:26px;font-weight:900;line-height:1;filter:drop-shadow(0 0 8px currentColor);transform-origin:center;animation:battle-shot .32s cubic-bezier(.16,.66,.33,1) both}
+.projectile-ranger,.projectile-ranged{color:#e9f1ad}.projectile-arcanist{color:#bf9afb;font-size:35px}.projectile-rogue{color:#e6ade6}.projectile-guardian{color:#b1e1fb}.projectile-melee{color:#f2a5a0}.projectile-strike{color:#ffc28a}
+.tile-impact .sprite{animation:target-flinch .28s ease-out}
+@keyframes battle-shot{0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(var(--angle))}15%{opacity:1}75%{opacity:1}100%{opacity:0;transform:translate(calc(var(--travel-x) - 50%),calc(var(--travel-y) - 50%)) scale(1.2) rotate(var(--angle))}}
+@keyframes target-flinch{0%,100%{filter:brightness(1);transform:translateX(0)}30%{filter:brightness(2);transform:translateX(-3px)}65%{filter:brightness(1.5);transform:translateX(3px)}}
+@media(max-width:600px){.battle-projectile{font-size:22px}.tracked-tile .tracked-mark{width:13px;height:13px;font-size:9px}}
+@media(prefers-reduced-motion:reduce){.battle-projectile,.tile-impact .sprite{animation:none;display:none}}

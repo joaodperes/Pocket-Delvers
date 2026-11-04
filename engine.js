@@ -1,11 +1,14 @@
-// Pocket Delvers v0.3 — deterministic game rules; zero runtime dependencies.
+// Pocket Delvers v0.4 — deterministic game rules; zero runtime dependencies.
 export const MAX_ROOMS=10, SIZE=5, STORAGE_KEY='pocket-delvers-save-v1', MAX_CHARGE=4, SKILL_COST=2;
 export const DICE_TYPES={
  standard:{name:'Adventurer Die',tag:'BALANCED',faces:[1,2,3,4,5,6],desc:'Every number is possible.',power:'A reliable die for any build.'},
  evenstone:{name:'Evenstone',tag:'EVEN',faces:[1,2,2,4,4,6],desc:'Reliable low and medium even rolls.',power:'Even rolls grant +2 Guard.',color:'even'},
  moon:{name:'Moonshard',tag:'ODD',faces:[1,1,3,3,5,5],desc:'Low-average rolls with guaranteed odd outcomes.',power:'Odd Strikes deal +1 damage.',color:'odd'},
  gravebone:{name:'Gravebone',tag:'TACTIC',faces:[1,2,3,3,5,6],desc:'The Grave Warden’s measured die. No 4, two 3s.',power:'Guard with 1: +2 Charge. Skill with 6: refund 1 Charge.',color:'six'},
- stormglass:{name:'Stormglass',tag:'SURGE',faces:[1,2,3,4,5,6],desc:'Special-attack focused, with all six faces.',power:'Skills on 4+ deal +1 damage.',color:'surge'}
+ stormglass:{name:'Stormglass',tag:'SURGE',faces:[1,2,3,4,5,6],desc:'Special-attack focused, with all six faces.',power:'Skills on 4+ deal +1 damage.',color:'surge'},
+ stride:{name:'Windstep',tag:'UTILITY',faces:[3,4,4,5,6,6],allowed:['move','guard'],desc:'Strong movement and defense, but cannot Strike or use Skills.',power:'MOVE / GUARD ONLY. Windstep Guard gains +1 extra shield.',color:'even'},
+ ember:{name:'Emberfang',tag:'ASSAULT',faces:[1,2,3,4,5,6],allowed:['strike','guard'],desc:'A weapon die with no movement or skill casting.',power:'STRIKE / GUARD ONLY. Strikes on 1–2 deal +3 damage.',color:'odd'},
+ sigil:{name:'Spellweave',tag:'CHANNEL',faces:[2,3,3,4,5,6],allowed:['skill','guard'],desc:'Specialized casting die; cannot move or perform a basic Strike.',power:'SKILL / GUARD ONLY. Guard grants +1 extra Charge.',color:'surge'}
 };
 export const HEROES={
  guardian:{name:'The Guardian',title:'IRONBOUND',hp:38,physical:1,arcane:0,strikeType:'physical',strikeRange:1,skillType:'physical',skill:'Shield Bash',desc:'Range 1 · Stun one enemy; damage reduced versus Strike',passive:'Bulwark: Guard +2. Physical +1.',unlock:'Starting hero'},
@@ -16,7 +19,7 @@ export const HEROES={
 export const ENEMIES={
  slime:{name:'Mire Slime',hp:8,damage:3,range:1,armor:0,ward:1,weakness:'Physical attacks',drop:'mire'},
  skeleton:{name:'Boneguard',hp:11,damage:4,range:1,armor:2,ward:0,weakness:'Arcane attacks',drop:'bone'},
- archer:{name:'Ash Archer',hp:8,damage:3,range:3,armor:0,ward:1,weakness:'Physical attacks',drop:'ash'},
+ archer:{name:'Ash Archer',hp:9,damage:4,range:4,armor:0,ward:1,weakness:'Physical attacks',drop:'ash'},
  brute:{name:'Hollow Brute',hp:17,damage:6,range:1,armor:2,ward:0,weakness:'Arcane attacks',drop:'brutegrip'},
  boss:{name:'Grave Warden',hp:49,damage:7,range:1,armor:1,ward:1,weakness:'Careful timing',drop:null}
 };
@@ -49,7 +52,7 @@ const num=(r,id)=>r.relics.filter(x=>x===id).length;
 const mapDie=t=>t==='twinsix'?'gravebone':t;
 const heroAffinity={guardian:['GUARD','MELEE','PHYSICAL'],ranger:['RANGED','PHYSICAL','DICE'],arcanist:['ARCANE','SKILL','DICE'],rogue:['BLEED','DICE','POSITION']};
 const normHeroes=m=>['guardian',...(m.best>=3?['ranger']:[]),...(m.elites>=1?['arcanist']:[]),...(m.wins>=1?['rogue']:[])];
-export const fresh=()=>({version:3,phase:'home',meta:{shards:0,best:0,wins:0,runs:0,elites:0,heroes:['guardian'],blueprints:['standard'],equipped:['standard','standard','standard']},run:null,muted:false,message:''});
+export const fresh=()=>({version:4,phase:'home',meta:{shards:0,best:0,wins:0,runs:0,elites:0,heroes:['guardian'],blueprints:['standard'],equipped:['standard','standard','standard']},run:null,muted:false,message:''});
 export function equipDie(s,slot,type){if(s.phase!=='home'||!Number.isInteger(slot)||slot<0||slot>2||!DICE_TYPES[type]||!s.meta.blueprints.includes(type))return false;s.meta.equipped[slot]=type;return true;}
 function normalizeMeta(meta,version){const old=version<3,m={...fresh().meta,shards:Math.max(0,Number(meta?.shards)||0),best:Math.max(0,Number(meta?.best)||0),wins:Math.max(0,Number(meta?.wins)||0),runs:Math.max(0,Number(meta?.runs)||0),elites:Math.max(0,Number(meta?.elites)||0)};
  m.blueprints=['standard',...(Array.isArray(meta?.blueprints)?meta.blueprints.map(mapDie).filter(x=>x!=='standard'&&DICE_TYPES[x]):[])];if(m.wins>=1)m.blueprints.push('gravebone');if(m.wins>=2)m.blueprints.push('stormglass');m.blueprints=[...new Set(m.blueprints)];m.equipped=Array.from({length:3},(_,i)=>{const id=mapDie(meta?.equipped?.[i]);return m.blueprints.includes(id)?id:'standard';});
@@ -57,40 +60,63 @@ function normalizeMeta(meta,version){const old=version<3,m={...fresh().meta,shar
  const legacy=old?['guardian','ranger','arcanist',...(m.shards>=40||m.wins>=1?['rogue']:[])]:[];
  m.heroes=[...new Set(['guardian',...legacy,...(Array.isArray(meta?.heroes)?meta.heroes.filter(x=>HEROES[x]):[]),...normHeroes(m)])];return m;}
 export const unlocked=(s,id)=>!!HEROES[id]&&(s.meta.heroes.includes(id)||normHeroes(s.meta).includes(id));
-export function start(s,id){if(!unlocked(s,id))return false;const h=HEROES[id];s.run={hero:id,hp:h.hp,max:h.hp,potions:2,tonics:1,gold:0,depth:1,kind:'battle',relics:[],upgrade:{strike:0,skill:0},kills:0,combat:null,choices:[],paths:[],diceLoadout:[...s.meta.equipped],newBlueprint:'',newHero:''};s.meta.runs++;enter(s,'battle');return true;}
-const roll=loadout=>[0,1,2].map(id=>{const kind=DICE_TYPES[loadout?.[id]]?loadout[id]:'standard';return {id,kind,value:pick(DICE_TYPES[kind].faces),used:false};});
+export function start(s,id){if(!unlocked(s,id))return false;const h=HEROES[id];s.run={hero:id,hp:h.hp,max:h.hp,potions:2,tonics:1,gold:0,depth:1,kind:'battle',relics:[],upgrade:{strike:0,skill:0},kills:0,combat:null,choices:[],paths:[],diceLoadout:[s.meta.equipped[0]||'standard'],newBlueprint:'',newHero:''};s.meta.runs++;enter(s,'battle');return true;}
+const roll=loadout=>(loadout||['standard']).map((_,id)=>{const kind=DICE_TYPES[loadout?.[id]]?loadout[id]:'standard';return {id,kind,value:pick(DICE_TYPES[kind].faces),used:false};});
 const alive=c=>c.enemies.filter(e=>e.hp>0);
 const occupied=(c,p)=>c.rocks.some(v=>k(v)===k(p))||alive(c).some(e=>k(e)===k(p));
 function path(c,from,max){let q=[from],seen=new Map([[k(from),0]]);for(let i=0;i<q.length;i++){let a=q[i],n=seen.get(k(a));if(n>=max)continue;for(let b of [{x:a.x+1,y:a.y},{x:a.x-1,y:a.y},{x:a.x,y:a.y+1},{x:a.x,y:a.y-1}]){if(b.x<0||b.x>=5||b.y<0||b.y>=5||seen.has(k(b))||occupied(c,b))continue;seen.set(k(b),n+1);q.push(b);}}return q.slice(1);}
-function intents(c){for(let e of alive(c)){let spec=ENEMIES[e.type];e.intent=e.stun?{type:'stun',name:'STUNNED',targets:[]}:d(e,c.player)<=spec.range?{type:'attack',name:e.type==='archer'?'SHOOT':e.type==='boss'?'SMASH':'STRIKE',targets:[{...c.player}]}:{type:'move',name:'ADVANCE',targets:[]};}}
+// Ranged attacks are explicitly telegraphed as TRACKING: they can be blocked with cover,
+// Guard, stun, or distance, but cannot be dodged by a single sideways step.
+const canShoot=(c,from,to,range)=>{if(d(from,to)>range)return false;const steps=Math.max(Math.abs(from.x-to.x),Math.abs(from.y-to.y));for(let i=1;i<steps;i++){const p={x:Math.round(from.x+(to.x-from.x)*i/steps),y:Math.round(from.y+(to.y-from.y)*i/steps)};if(c.rocks.some(v=>k(v)===k(p)))return false;}return true;};
+export const threatens=(c,e,pos=c.player)=>!!e.intent&&e.intent.type==='attack'&&(e.intent.tracking?canShoot(c,e,pos,e.intent.range||ENEMIES[e.type].range):e.intent.targets.some(p=>k(p)===k(pos)));
+function intents(c){for(let e of alive(c)){let spec=ENEMIES[e.type];if(e.stun){e.intent={type:'stun',name:'STUNNED',targets:[]};continue;}
+ const ranged=e.type==='archer'||(e.type==='boss'&&c.turn%2===0);
+ if(ranged&&canShoot(c,e,c.player,spec.range+(e.type==='boss'?2:0)))e.intent={type:'attack',name:e.type==='boss'?'GRAVE BOLT':'TRACKING SHOT',tracking:true,range:spec.range+(e.type==='boss'?2:0),targets:[{...c.player}]};
+ else if(d(e,c.player)<=spec.range&&(!ranged||e.type==='boss'))e.intent={type:'attack',name:e.type==='boss'?'SWEEP':'STRIKE',tracking:false,targets:[{...c.player}]};
+ else e.intent={type:'move',name:ranged?'SEEK ANGLE':'HUNT',steps:e.type==='brute'?2:2,targets:[]};
+ }}
+function pursue(c,e,steps){
+ // Breadth-first distance field lets enemies navigate around rock corners.
+ const q=[c.player],dist=new Map([[k(c.player),0]]),blocked=new Set(c.rocks.map(k));
+ for(let i=0;i<q.length;i++){const v=q[i],depth=dist.get(k(v));for(const p of [{x:v.x+1,y:v.y},{x:v.x-1,y:v.y},{x:v.x,y:v.y+1},{x:v.x,y:v.y-1}]){
+ if(p.x<0||p.x>=SIZE||p.y<0||p.y>=SIZE||blocked.has(k(p))||dist.has(k(p)))continue;dist.set(k(p),depth+1);q.push(p);}}
+ for(let i=0;i<steps;i++){const cur=dist.get(k(e))??Infinity;const opts=grid().filter(p=>d(p,e)===1&&!occupied(c,p)&&k(p)!==k(c.player)&&dist.has(k(p)));opts.sort((a,b)=>dist.get(k(a))-dist.get(k(b)));if(!opts.length||dist.get(k(opts[0]))>=cur)return;e.x=opts[0].x;e.y=opts[0].y;}}
+
+
 function gain(s,n){const c=s.run?.combat;if(c)c.charge=clamp((c.charge||0)+n,0,MAX_CHARGE);}
 function log(c,t){c.log.unshift(t);c.log=c.log.slice(0,5);}
 function grantHero(s){const m=s.meta;for(const id of ['ranger','arcanist','rogue']){if(normHeroes(m).includes(id)&&!m.heroes.includes(id)){m.heroes.push(id);if(s.run)s.run.newHero=id;}}}
 function availableRelics(s){const r=s.run;const ownership=new Set(r.relics),pool=RELICS.filter(x=>!x.drop&&(!ownership.has(x.id)||['vial','tonic','heart','chalice'].includes(x.id))&&!(r.hero==='arcanist'&&['fang','parity','nightoil','hawkeye'].includes(x.id))&&!(r.hero!=='arcanist'&&['lens','capacitor'].includes(x.id))&&!(HEROES[r.hero].strikeRange===1&&['ash','hawkeye'].includes(x.id)));const affinity=heroAffinity[r.hero]||[];pool.sort((a,b)=>b.tags.filter(t=>affinity.includes(t)).length-a.tags.filter(t=>affinity.includes(t)).length);return pool;}
-function rewards(s,source=null){const pool=availableRelics(s);const out=[];if(source){const drop=RELICS.find(x=>x.drop===source);if(drop&&!s.run.relics.includes(drop.id))out.push(drop);}
- // One affinity-weighted option in each choice set; the other slots remain unpredictable.
- if(!out.length){const suggested=pool.filter(x=>x.tags.some(t=>heroAffinity[s.run.hero]?.includes(t)));if(suggested.length){const item=pick(suggested);out.push(item);pool.splice(pool.indexOf(item),1);}}
- while(out.length<3&&pool.length){out.push(pool.splice(rand(pool.length),1)[0]);}return out;}
+export const dieOffer=id=>({id:'die:'+id,icon:'🎲',name:(DICE_TYPES[id]||DICE_TYPES.standard).name+' · New die',desc:`Faces: ${(DICE_TYPES[id]||DICE_TYPES.standard).faces.join(' / ')}. ${(DICE_TYPES[id]||DICE_TYPES.standard).power}`,tags:['DIE','RUN ONLY']});
+function diceOptions(s){const r=s.run,ids=['standard','stride','ember','sigil','evenstone','moon',...s.meta.blueprints.filter(id=>!['standard','evenstone','moon'].includes(id))];return [...new Set(ids)].filter(id=>DICE_TYPES[id]&&(!DICE_TYPES[id].allowed||DICE_TYPES[id].allowed.length>0));}
+function rewards(s,source=null){const r=s.run,pool=availableRelics(s),out=[];
+ if(r.depth===1&&r.diceLoadout.length===1)return ['standard','stride','ember'].map(dieOffer);
+ if(r.diceLoadout.length<3&&(r.depth===3||r.depth>=5||r.kind==='elite'))out.push(dieOffer(pick(diceOptions(s))));
+ if(source){const drop=RELICS.find(x=>x.drop===source);if(drop&&!r.relics.includes(drop.id)&&out.length<2)out.push(drop);}
+ if(!out.length){const suggested=pool.filter(x=>x.tags.some(t=>heroAffinity[r.hero]?.includes(t)));if(suggested.length){const item=pick(suggested);out.push(item);pool.splice(pool.indexOf(item),1);}}
+ while(out.length<3&&pool.length)out.push(pool.splice(rand(pool.length),1)[0]);return out;}
+
 export function enter(s,kind){let r=s.run;r.kind=kind;r.newBlueprint='';r.newHero='';s.meta.best=Math.max(s.meta.best,r.depth);grantHero(s);r.combat=null;
  if(kind==='camp'){r.choices=[{id:'rest',icon:'♥',name:'Rest by the fire',desc:'Recover 40% of maximum HP.'},{id:'train',icon:'⚔',name:'Sharpen your weapon',desc:'Strikes gain +1 damage.'},{id:'meditate',icon:'✦',name:'Focus your power',desc:'Skills gain +1 damage.'}];s.phase='choice';return;}
  if(kind==='cache'){r.choices=rewards(s);s.phase='choice';return;}
- if(kind==='merchant'){r.choices=[{id:'potion',name:'Restorative Vial',icon:'✚',desc:'Gain one healing potion.',cost:10},{id:'tonic',name:'Fortune Tonic',icon:'↻',desc:'One extra die reroll, usable in any battle.',cost:9},{id:'forge',name:'Warrior’s Edge',icon:'⚔',desc:'Strikes gain +1 damage.',cost:15},{id:'blessing',name:'Warden’s Blessing',icon:'♥',desc:'Gain 5 max HP and heal 5.',cost:19}];s.phase='shop';return;}
+ if(kind==='merchant'){r.choices=[{id:'potion',name:'Restorative Vial',icon:'✚',desc:'Gain one healing potion.',cost:10},{id:'tonic',name:'Fortune Tonic',icon:'↻',desc:'One extra die reroll, usable in any battle.',cost:9},{id:'newdie',name:'Wandering Die',icon:'🎲',desc:'Add a random die to this expedition (max 3).',cost:16},{id:'forge',name:'Warrior’s Edge',icon:'⚔',desc:'Strikes gain +1 damage.',cost:15},{id:'blessing',name:'Warden’s Blessing',icon:'♥',desc:'Gain 5 max HP and heal 5.',cost:19}];s.phase='shop';return;}
  const cells=grid().filter(p=>p.y>0&&p.y<4&&p.x!==2),rocks=[];for(let j=0;j<2;j++)rocks.push(cells.splice(rand(cells.length),1)[0]);
  const spots=grid().filter(p=>p.y<3&&!rocks.some(b=>k(b)===k(p))),enemies=[];const count=kind==='boss'?1:kind==='elite'?Math.min(4,2+Math.floor(r.depth/4)):Math.min(3,1+Math.floor(r.depth/3));
- for(let i=0;i<count;i++){const type=kind==='boss'?'boss':kind==='elite'&&i===0?'brute':pick(r.depth<3?['slime','skeleton']:['slime','skeleton','archer','brute']);const p=spots.splice(rand(spots.length),1)[0],base=ENEMIES[type],hp=base.hp+(type==='boss'?0:Math.floor((r.depth-1)/3)*2+(kind==='elite'?3:0));enemies.push({id:`${type}-${i}`,type,...p,hp,maxHp:hp,damage:base.damage+(kind==='elite'?1:0),stun:0,bleed:0,bleedTurns:0,intent:null});}
- r.combat={player:{x:2,y:4},rocks,enemies,defeated:[],dice:roll(r.diceLoadout),selected:0,action:'move',turn:1,shield:3*num(r,'shell'),charge:1,focus:1+num(r,'mirror'),trickUsed:false,log:[kind==='boss'?'The Grave Warden stirs.':'The darkness has company.']};intents(r.combat);s.phase='combat';s.message='';
+ for(let i=0;i<count;i++){const type=kind==='boss'?'boss':kind==='elite'&&i===0?'brute':r.depth===1?'slime':(i===0&&r.depth>=2?'archer':pick(['slime','skeleton','archer','brute']));const p=spots.splice(rand(spots.length),1)[0],base=ENEMIES[type],hp=base.hp+(type==='boss'?0:Math.floor((r.depth-1)/3)*2+(kind==='elite'?3:0));enemies.push({id:`${type}-${i}`,type,...p,hp,maxHp:hp,damage:base.damage+(kind==='elite'?1:0)+Math.floor((r.depth-1)/4),stun:0,bleed:0,bleedTurns:0,intent:null});}
+ r.combat={player:{x:2,y:4},rocks,enemies,defeated:[],dice:roll(r.diceLoadout),selected:0,action:DICE_TYPES[r.diceLoadout[0]]?.allowed?.[0]||'move',turn:1,shield:3*num(r,'shell'),charge:1,focus:1+num(r,'mirror'),trickUsed:false,animations:[],log:[kind==='boss'?'The Grave Warden stirs.':'The darkness has company.']};intents(r.combat);s.phase='combat';s.message='';
 }
 export const die=s=>s.run?.combat?.dice[s.run.combat.selected];
 export const available=c=>c.dice.filter(v=>!v.used).length;
-export function setDie(s,i){const c=s.run?.combat;if(!c||!c.dice[i]||c.dice[i].used)return false;c.selected=i;return true;}
-export function setAction(s,a){const c=s.run?.combat;if(!c||!['move','strike','guard','skill'].includes(a))return false;c.action=a;return true;}
+export function setDie(s,i){const c=s.run?.combat;if(!c||!c.dice[i]||c.dice[i].used)return false;c.selected=i;if(!canUse(c.dice[i],c.action))c.action=DICE_TYPES[c.dice[i].kind]?.allowed?.[0]||'move';return true;}
+export const canUse=(die,action)=>!die||!DICE_TYPES[die.kind]?.allowed||DICE_TYPES[die.kind].allowed.includes(action);
+export function setAction(s,a){const c=s.run?.combat;if(!c||!['move','strike','guard','skill'].includes(a)||!canUse(c.dice[c.selected],a))return false;c.action=a;return true;}
 export function actionPreview(s){const r=s.run,c=r?.combat,v=die(s);if(!c||!v||v.used)return null;const h=HEROES[r.hero],n=v.value,type=DICE_TYPES[v.kind]||DICE_TYPES.standard;
  const base=2+Math.ceil(n/2),strType=h.strikeType,skillType=h.skillType,skillBase=1+Math.ceil(n/2);
  const typeBonus=t=>t==='physical'?h.physical:h.arcane;
- let strike=base+typeBonus(strType)+r.upgrade.strike+(strType==='arcane'?num(r,'lens')*2:0)+(n===6?num(r,'tooth')*3:0)+(type.tag==='ODD'&&n%2?1:0)+(strType==='physical'&&n%2===0?num(r,'parity')*2:0);
- let guard=n+1+num(r,'ward')*2+(r.hero==='guardian'?2:0)+(type.tag==='EVEN'&&n%2===0?2:0)+(n%2===0?num(r,'bone')*2:0)+(n<=2?num(r,'bastion')*3:0);
+ let strike=base+typeBonus(strType)+r.upgrade.strike+(strType==='arcane'?num(r,'lens')*2:0)+(n===6?num(r,'tooth')*3:0)+(type.tag==='ODD'&&n%2?1:0)+(v.kind==='ember'&&n<=2?3:0)+(strType==='physical'&&n%2===0?num(r,'parity')*2:0);
+ let guard=n+1+num(r,'ward')*2+(r.hero==='guardian'?2:0)+(type.tag==='EVEN'&&n%2===0?2:0)+(n%2===0?num(r,'bone')*2:0)+(n<=2?num(r,'bastion')*3:0)+(v.kind==='stride'?1:0);
  let skill=skillBase+typeBonus(skillType)+r.upgrade.skill+(skillType==='arcane'?num(r,'lens')*2:0)+(n%2?num(r,'oddwood')*2:0)+(type.tag==='SURGE'&&n>=4?1:0)+(r.hero==='ranger'&&n===6?2:0);
- return {move:n+num(r,'boots'),strike,guard,skill:n<3?null:skill,strikeType:strType,skillType,range:{guardian:1,arcanist:3,ranger:4,rogue:2}[r.hero],strikeRange:h.strikeRange,charge:c.charge||0,skillCost:SKILL_COST,skillReady:n>=3&&(c.charge||0)>=SKILL_COST,type:type.name};}
+ return {allowed:type.allowed||['move','strike','guard','skill'],move:n+num(r,'boots'),strike,guard,skill:n<3?null:skill,strikeType:strType,skillType,range:{guardian:1,arcanist:3,ranger:4,rogue:2}[r.hero],strikeRange:h.strikeRange,charge:c.charge||0,skillCost:SKILL_COST,skillReady:n>=3&&(c.charge||0)>=SKILL_COST&&canUse(v,'skill'),type:type.name};}
 export function damageAgainst(s,e,action){const p=actionPreview(s);if(!p||!['strike','skill'].includes(action))return null;const h=HEROES[s.run.hero],n=die(s).value,kind=p[action+'Type'];let raw=p[action];if(raw==null)return null;
  if(action==='strike'){
  if(h.strikeRange>1&&d(s.run.combat.player,e)>=2)raw+=num(s.run,'ash')*2;
@@ -102,9 +128,9 @@ export function damageAgainst(s,e,action){const p=actionPreview(s);if(!p||!['str
  const resist=action==='skill'&&s.run.hero==='ranger'?0:(kind==='physical'?ENEMIES[e.type].armor:ENEMIES[e.type].ward);
  return Math.max(1,raw-resist);
 }
-export function incoming(s){if(s.phase!=='combat')return {total:0,blocked:0,hpLoss:0};const c=s.run.combat,total=alive(c).reduce((a,e)=>a+(e.intent?.type==='attack'&&e.intent.targets?.some(p=>k(p)===k(c.player))?e.damage:0),0);return {total,blocked:Math.min(total,c.shield),hpLoss:Math.max(0,total-c.shield)};}
+export function incoming(s){if(s.phase!=='combat')return {total:0,blocked:0,hpLoss:0};const c=s.run.combat,total=alive(c).reduce((a,e)=>a+(threatens(c,e)?e.damage:0),0);return {total,blocked:Math.min(total,c.shield),hpLoss:Math.max(0,total-c.shield)};}
 export function reroll(s,index=s.run?.combat?.selected){if(s.phase!=='combat')return false;const r=s.run,c=r.combat,v=c.dice[index];if(!v||v.used)return false;const free=r.hero==='rogue'&&!c.trickUsed;if(!free&&c.focus<=0&&r.tonics<=0)return false;const source=free?'Trickster':c.focus>0?'focus':'tonic';if(free)c.trickUsed=true;else if(c.focus>0)c.focus--;else r.tonics--;v.value=pick((DICE_TYPES[v.kind]||DICE_TYPES.standard).faces);c.selected=index;log(c,`Rerolled die ${index+1}: ${v.value} (${source}).`);s.message='';return true;}
-export function targets(s){if(s.phase!=='combat')return [];const r=s.run,c=r.combat,v=die(s),h=HEROES[r.hero];if(!v||v.used)return [];if(c.action==='move')return path(c,c.player,v.value+num(r,'boots'));
+export function targets(s){if(s.phase!=='combat')return [];const r=s.run,c=r.combat,v=die(s),h=HEROES[r.hero];if(!v||v.used||!canUse(v,c.action))return [];if(c.action==='move')return path(c,c.player,v.value+num(r,'boots'));
  if(c.action==='strike')return alive(c).filter(e=>d(c.player,e)<=h.strikeRange).map(e=>({x:e.x,y:e.y}));
  if(c.action==='skill'&&actionPreview(s).skillReady)return alive(c).filter(e=>d(c.player,e)<=actionPreview(s).range).map(e=>({x:e.x,y:e.y}));return [];}
 function hit(s,e,hp){if(e.hp<=0)return 0;const c=s.run.combat;e.hp=Math.max(0,e.hp-hp);log(c,`${ENEMIES[e.type].name} takes ${hp} damage${e.hp===0?' and falls!':'.'}`);if(!e.hp){s.run.gold+=e.type==='boss'?25:e.type==='brute'?5:3;s.run.kills++;c.defeated??=[];c.defeated.push(e.type);}return hp;}
@@ -113,8 +139,8 @@ function unlockBlueprint(s){const r=s.run,candidates=r.kind==='boss'?['gravebone
 function cleared(s){let r=s.run,c=r.combat;c.enemies=alive(c);if(c.enemies.length)return false;const defeated=c.defeated||[];if(['elite','boss'].includes(r.kind))unlockBlueprint(s);if(r.kind==='elite'){s.meta.elites++;grantHero(s);}r.hp=clamp(r.hp+num(r,'chalice')*3,0,r.max);s.meta.shards+=r.kind==='boss'?25:r.kind==='elite'?4:2;r.combat=null;
  if(r.kind==='boss'){s.meta.wins++;grantHero(s);s.phase='victory';s.message='The darkness retreats.';}
  else{const source=[...defeated].reverse().find(type=>ENEMIES[type]?.drop);r.choices=rewards(s,source);s.phase='reward';s.message='Room cleared. Choose one relic.';}return true;}
-export function act(s,target){if(s.phase!=='combat')return false;const r=s.run,c=r.combat,v=die(s);if(!v||v.used)return false;const n=v.value,h=HEROES[r.hero],p=actionPreview(s);
- if(c.action==='guard'){c.shield+=p.guard;gain(s,1+(v.kind==='gravebone'&&n===1?2:0)+(n<=2?num(r,'bastion'):0));log(c,`Guard +${p.guard}; Charge ${c.charge}/${MAX_CHARGE}.`);}
+export function act(s,target){if(s.phase!=='combat')return false;const r=s.run,c=r.combat,v=die(s);if(!v||v.used||!canUse(v,c.action))return false;const n=v.value,h=HEROES[r.hero],p=actionPreview(s);
+ if(c.action==='guard'){c.shield+=p.guard;gain(s,1+(v.kind==='gravebone'&&n===1?2:0)+(n<=2?num(r,'bastion'):0)+(v.kind==='sigil'?1:0));log(c,`Guard +${p.guard}; Charge ${c.charge}/${MAX_CHARGE}.`);}
  else{
  if(c.action==='skill'&&!p.skillReady){s.message=n<3?'Skills require a die of 3+.':`Skills cost ${SKILL_COST} Charge. Strike or Guard to build it.`;return false;}
  if(!target||!targets(s).some(t=>k(t)===k(target))){s.message='Tap a highlighted target.';return false;}
@@ -134,18 +160,20 @@ export function act(s,target){if(s.phase!=='combat')return false;const r=s.run,c
  }
  }
  }
- v.used=true;const next=c.dice.findIndex(x=>!x.used);if(next>=0)c.selected=next;s.message='';if(cleared(s))return true;if(next<0)enemyTurn(s);return true;
+ v.used=true;const next=c.dice.findIndex(x=>!x.used);if(next>=0){c.selected=next;if(!canUse(c.dice[next],c.action))c.action=DICE_TYPES[c.dice[next].kind]?.allowed?.[0]||'move';}s.message='';if(cleared(s))return true;if(next<0)enemyTurn(s);return true;
 }
-function enemyTurn(s){const r=s.run,c=r.combat;for(const e of alive(c)){if((e.bleed||0)>0){hit(s,e,e.bleed);e.bleedTurns=Math.max(0,(e.bleedTurns||0)-1);if(!e.bleedTurns)e.bleed=0;}}
+function enemyTurn(s){const r=s.run,c=r.combat;c.animations=[];for(const e of alive(c)){if((e.bleed||0)>0){hit(s,e,e.bleed);e.bleedTurns=Math.max(0,(e.bleedTurns||0)-1);if(!e.bleedTurns)e.bleed=0;}}
  if(cleared(s))return;
- for(const e of alive(c)){const t=e.intent;if(t.type==='attack'&&t.targets.some(p=>k(p)===k(c.player))){let blocked=Math.min(c.shield,e.damage),hp=e.damage-blocked;c.shield-=blocked;r.hp=Math.max(0,r.hp-hp);log(c,`${ENEMIES[e.type].name} hits for ${hp}${blocked?` (${blocked} blocked)`:''}.`);}
- else if(t.type==='move'){const options=grid().filter(p=>d(p,e)===1&&!occupied(c,p)&&k(p)!==k(c.player)).sort((a,b)=>d(a,c.player)-d(b,c.player));if(options.length&&d(options[0],c.player)<d(e,c.player)){e.x=options[0].x;e.y=options[0].y;}}
- else if(t.type==='attack')log(c,`${ENEMIES[e.type].name} misses.`);else log(c,`${ENEMIES[e.type].name} is stunned.`);}
- if(r.hp<=0){r.combat=null;s.phase='defeat';return;}for(const e of c.enemies)e.stun=Math.max(0,e.stun-1);c.turn++;c.shield=0;c.action='move';c.dice=roll(r.diceLoadout);c.selected=0;c.focus=1+num(r,'mirror');c.trickUsed=false;intents(c);s.message='';}
+ for(const e of alive(c)){const t=e.intent;if(t.type==='attack'&&threatens(c,e)){let blocked=Math.min(c.shield,e.damage),hp=e.damage-blocked;c.shield-=blocked;r.hp=Math.max(0,r.hp-hp);c.animations.push({kind:t.tracking?'ranged':'melee',from:{x:e.x,y:e.y},to:{...c.player},amount:hp});log(c,`${ENEMIES[e.type].name} ${t.tracking?'shoots':'hits'} for ${hp}${blocked?` (${blocked} blocked)`:''}.`);}
+ else if(t.type==='move'){pursue(c,e,t.steps||2);log(c,`${ENEMIES[e.type].name} closes in.`);}
+ else if(t.type==='attack')log(c,`${ENEMIES[e.type].name} misses (cover, distance or dodge).`);else log(c,`${ENEMIES[e.type].name} is stunned.`);}
+ if(r.hp<=0){r.combat=null;s.phase='defeat';return;}for(const e of c.enemies)e.stun=Math.max(0,e.stun-1);c.turn++;c.shield=0;c.action=DICE_TYPES[r.diceLoadout[0]]?.allowed?.[0]||'move';c.dice=roll(r.diceLoadout);c.selected=0;c.focus=1+num(r,'mirror');c.trickUsed=false;intents(c);s.message='';}
+
 export function endTurn(s){if(s.phase!=='combat')return false;enemyTurn(s);return true;}
 export function potion(s){if(s.phase!=='combat'||s.run.potions<1||s.run.hp===s.run.max)return false;const r=s.run;r.potions--;const h=Math.min(12,r.max-r.hp);r.hp+=h;log(r.combat,`You drink a potion (+${h} HP).`);return true;}
 export function choose(s,id){if(!['choice','reward'].includes(s.phase))return false;const r=s.run,x=r.choices.find(i=>i.id===id);if(!x)return false;
- if(id==='rest')r.hp=Math.min(r.max,r.hp+Math.ceil(r.max*.4));else if(id==='train')r.upgrade.strike++;else if(id==='meditate')r.upgrade.skill++;
+ if(id.startsWith('die:')){if(r.diceLoadout.length>=3)return false;r.diceLoadout.push(id.slice(4));}
+ else if(id==='rest')r.hp=Math.min(r.max,r.hp+Math.ceil(r.max*.4));else if(id==='train')r.upgrade.strike++;else if(id==='meditate')r.upgrade.skill++;
  else{r.relics.push(id);if(id==='heart'){r.max+=6;r.hp+=6;}if(id==='vial')r.potions++;if(id==='tonic')r.tonics+=2;}
  if(s.phase==='choice')s.meta.shards++;r.choices=[];makePaths(s);return true;}
 export function makePaths(s){const r=s.run,n=r.depth+1;
@@ -156,12 +184,12 @@ export function makePaths(s){const r=s.run,n=r.depth+1;
  else r.paths=[{id:'battle',kind:'battle',icon:'◇',name:pick(['Fungal Crossing','Moonlit Crypt','Broken Stair','Echoing Depths']),desc:'A standard encounter.',risk:'BATTLE'},{id:'elite',kind:'elite',icon:'⚔',name:pick(['The Bloodwell','Hollow Sanctum','Shattered Barracks']),desc:'Harder enemies, more shards.',risk:'DANGER'}];
  s.phase='path';}
 export function takePath(s,id){if(s.phase!=='path')return false;const opt=s.run.paths.find(i=>i.id===id);if(!opt)return false;s.run.depth++;enter(s,opt.kind);return true;}
-export function buy(s,id){if(s.phase!=='shop')return false;const r=s.run,x=r.choices.find(i=>i.id===id);if(!x||r.gold<x.cost||(id==='potion'&&r.potions>=5))return false;r.gold-=x.cost;if(id==='potion')r.potions++;if(id==='tonic')r.tonics++;if(id==='forge')r.upgrade.strike++;if(id==='blessing'){r.max+=5;r.hp+=5;}r.choices=r.choices.filter(i=>i.id!==id);return true;}
+export function buy(s,id){if(s.phase!=='shop')return false;const r=s.run,x=r.choices.find(i=>i.id===id);if(!x||r.gold<x.cost||(id==='potion'&&r.potions>=5)||(id==='newdie'&&r.diceLoadout.length>=3))return false;r.gold-=x.cost;if(id==='potion')r.potions++;if(id==='tonic')r.tonics++;if(id==='newdie')r.diceLoadout.push(pick(diceOptions(s)));if(id==='forge')r.upgrade.strike++;if(id==='blessing'){r.max+=5;r.hp+=5;}r.choices=r.choices.filter(i=>i.id!==id);return true;}
 export function leaveShop(s){if(s.phase!=='shop')return false;s.meta.shards++;makePaths(s);return true;}
 export function pause(s){if(s.phase==='home'||!s.run)return false;s.run.paused=s.phase;s.phase='home';return true;}
 export function resume(s){if(s.phase!=='home'||!s.run?.paused)return false;s.phase=s.run.paused;delete s.run.paused;return true;}
 export function abandon(s){s.run=null;s.phase='home';return true;}
-export function restore(raw){if(!raw||![1,2,3].includes(raw.version)||!raw.meta)return fresh();const s=fresh();s.meta=normalizeMeta(raw.meta,raw.version);s.muted=!!raw.muted;
+export function restore(raw){if(!raw||![1,2,3,4].includes(raw.version)||!raw.meta)return fresh();const s=fresh();s.meta=normalizeMeta(raw.meta,raw.version);s.muted=!!raw.muted;
  if(['home','combat','choice','reward','path','shop','defeat','victory'].includes(raw.phase)&&raw.run&&HEROES[raw.run.hero]&&raw.run.depth>0&&raw.run.depth<=10&&raw.run.hp>=0&&Array.isArray(raw.run.relics)){
- if(raw.phase==='combat'&&!raw.run.combat?.dice?.length)return s;if(raw.phase==='home'&&!raw.run.paused)return s;s.phase=raw.phase;s.run=raw.run;s.run.tonics=Math.max(0,Number(raw.run.tonics??1)||0);s.run.newBlueprint=mapDie(raw.run.newBlueprint||'');s.run.newHero=raw.run.newHero||'';s.run.diceLoadout=Array.from({length:3},(_,i)=>{const id=mapDie(raw.run.diceLoadout?.[i]);return DICE_TYPES[id]?id:s.meta.equipped[i];});s.run.upgrade??={strike:0,skill:0};if(s.run.combat){const c=s.run.combat;c.focus=Math.max(0,Number(c.focus??1)||0);c.charge=clamp(Number(c.charge??1)||0,0,MAX_CHARGE);c.trickUsed=!!c.trickUsed;c.defeated??=[];c.dice.forEach((v,i)=>{v.kind=DICE_TYPES[mapDie(v.kind)]?mapDie(v.kind):s.run.diceLoadout[i];});c.enemies.forEach(e=>{e.bleed??=0;e.bleedTurns??=0;});}}
+ if(raw.phase==='combat'&&!raw.run.combat?.dice?.length)return s;if(raw.phase==='home'&&!raw.run.paused)return s;s.phase=raw.phase;s.run=raw.run;s.run.tonics=Math.max(0,Number(raw.run.tonics??1)||0);s.run.newBlueprint=mapDie(raw.run.newBlueprint||'');s.run.newHero=raw.run.newHero||'';s.run.diceLoadout=Array.from({length:Math.min(3,Math.max(1,raw.run.diceLoadout?.length||3))},(_,i)=>{const id=mapDie(raw.run.diceLoadout?.[i]);return DICE_TYPES[id]?id:s.meta.equipped[i]||'standard';});s.run.upgrade??={strike:0,skill:0};if(s.run.combat){const c=s.run.combat;c.focus=Math.max(0,Number(c.focus??1)||0);c.charge=clamp(Number(c.charge??1)||0,0,MAX_CHARGE);c.trickUsed=!!c.trickUsed;c.defeated??=[];c.dice.forEach((v,i)=>{v.kind=DICE_TYPES[mapDie(v.kind)]?mapDie(v.kind):(s.run.diceLoadout[i]||'standard');});c.animations??=[];if(!canUse(c.dice[c.selected]||c.dice[0],c.action))c.action=DICE_TYPES[c.dice[c.selected]?.kind]?.allowed?.[0]||'move';c.enemies.forEach(e=>{e.bleed??=0;e.bleedTurns??=0;});}}
  return s;}
