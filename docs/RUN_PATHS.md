@@ -1,3 +1,5 @@
+> **v0.8 update:** The core roguelite and class rules below remain applicable. Enemy design, compulsory champion, poison movement, three-phase boss and the revised balance probe are documented in [ENCOUNTERS.md](ENCOUNTERS.md) and [BALANCE.md](BALANCE.md). Older v0.5–v0.7 diagnostics are historical baselines, not current outcomes.
+
 # v0.7 Run Paths: class identity, enemy pressure and balance
 
 **Status:** implemented in `dev` for playtesting. GitHub Pages continues to publish `main` until reviewed. [DESIGN.md](DESIGN.md) records the v0.5 foundations; this is the canonical guide for run-only class Paths added in v0.6.

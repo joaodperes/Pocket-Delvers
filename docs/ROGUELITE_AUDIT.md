@@ -1,3 +1,5 @@
+> **v0.8 update:** The core roguelite and class rules below remain applicable. Enemy design, compulsory champion, poison movement, three-phase boss and the revised balance probe are documented in [ENCOUNTERS.md](ENCOUNTERS.md) and [BALANCE.md](BALANCE.md). Older v0.5–v0.7 diagnostics are historical baselines, not current outcomes.
+
 # Roguelite consistency audit — v0.7
 
 **Scope:** `engine.js`, `app.js`, home/records, rewards, shops, save import/export, run lifecycle, and old data migrations. This documents implemented safeguards as well as open design limitations. The game remains a mobile-first tactical roguelite with **discovery unlocks**, not a no-progression roguelike.

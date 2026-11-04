@@ -4,7 +4,7 @@
 
 A mobile-first tactical dice roguelite for GitHub Pages. No server, accounts, downloads, or runtime dependencies. It autosaves locally, offers JSON import/export and offline installation as a Progressive Web App.
 
-**Status:** v0.7 development candidate, not a production release. Read the [roguelite integrity audit](docs/ROGUELITE_AUDIT.md), [class design](docs/DESIGN.md), and [Run Paths guide](docs/RUN_PATHS.md).
+**Status:** v0.8 development candidate, not a production release. Read the [combat encounters guide](docs/ENCOUNTERS.md), [balance methodology](docs/BALANCE.md), [roguelite integrity audit](docs/ROGUELITE_AUDIT.md), [class design](docs/DESIGN.md), and [Run Paths guide](docs/RUN_PATHS.md).
 
 ## Play
 
@@ -14,7 +14,8 @@ A mobile-first tactical dice roguelite for GitHub Pages. No server, accounts, do
 4. **Strikes** and **Guard** produce +1 Charge. **Skills** require a die showing 3+ and spend 2 Charge. The Arcanist starts battles with 2 Charge, has a 6-Charge maximum, and regenerates 1 Charge at the start of every new round. Arcane Skills also gain +2 baseline damage. Stronger spells are balanced by basic Strikes that start at **max(0, roll − 2)** arcane damage before Ward and relics.
 5. Enemies telegraph their attacks. Most melee enemies pursue up to two tiles per turn; **Gloom Hounds** sprint three and announce a dodgeable Pounce. **Ash Archers** and **Cinder Seers** fire tracking shots; Seers drain one Charge only if their attack damages HP. Break line of sight with cover, leave range, block, stun, or kill an enemy to avoid its attack. Actual post-Armor/Ward damage is visible on enemies before choosing an attack.
 6. Earn run-only dice and choose relics. **Cindercoil** can Strike or cast but never Move or Guard; **Iron Bastion** can Move or Guard but cannot attack. Specialized dice may have high values but fewer allowed actions. Relics can enhance spells at the cost of Guard or HP, reward distant attacks over close-range fighting, or turn weak rolls into valuable Bleed/Charge generators.
-7. After room 2, choose **one of three run-only Paths** for your hero. After room 10, win or die. Dice, relics, gold, health bonuses, Strike/Skill upgrades, consumables, and Paths all reset on the next run. Only class unlocks, discovered dice *patterns*, guild records and settings persist. Autosave preserves an **ongoing** run across sessions.
+7. **Room 5 is a compulsory champion fight** (Iron Executioner, Spore Matriarch or Soul Binder); optional champions also appear in other branches. Poisonous tiles warn for a full turn before dealing damage, and the game automatically picks the least-dangerous route within your movement die. **The final Grave Warden has three phases**, adding poison and reinforcements as health falls.
+8. After room 2, choose **one of three run-only Paths** for your hero. In room 10, defeat the Warden and any remaining summons to win; otherwise die. Dice, relics, gold, health bonuses, Strike/Skill upgrades, consumables, and Paths all reset on the next run. Only class unlocks, discovered dice *patterns*, guild records and settings persist. Autosave preserves an **ongoing** run across sessions.
 
 ### Classes
 
@@ -62,6 +63,18 @@ This is not a new currency or leveling tree. Paths are **exclusive run identitie
 
 Many other general relics and creature drops still exist, including bleed, guard, range, reroll and multi-target synergies. Items appear as **choices**, not automatic stacks. Class-specific items are never offered to other classes.
 
+### Tactical monsters and champions (v0.8)
+
+Common enemies now include Shieldbreakers (crack Guard), Hollow Duelists (riposte against repeated melee Strikes), Venom Spores (poison terrain), Hex Snipers (fixed firing lanes), War Drummers (buff allies) and Grave Summoners (raise Wisps). Every action has a stated telegraph, a visible counter and a specialized visual on the board. The three named champions have different signatures, rather than serving as Brutes with more HP. Boss control now uses a two-Skill stagger instead of an unconditional Shield Bash stun.
+
+- **Marked tile/lane:** move off the highlighted squares before the enemy turn.
+- **Tracking shot:** sideways movement is not enough; use cover, Guard, range or a stun.
+- **Poison:** a green warning turns active on the *next* player turn; entering a toxic tile costs 1 HP, and ending there costs 2 (boss poison: 3). Guard does not block this. Higher movement dice can choose longer safe routes.
+- **Soul Binder:** a Crystal can disable one die when you have at least two; destroy it to release that die and regain Charge. Single-die heroes cannot be locked out.
+- **Room 5:** forced Trial of Champions to prevent safe-route farming of easy wins.
+
+See [ENCOUNTERS.md](docs/ENCOUNTERS.md) for encounter state diagrams and precise rules and [BALANCE.md](docs/BALANCE.md) for seeded-agent results and limitations.
+
 ### Dice progression
 
 Each fresh run always equips only its class signature dice; you cannot take last run's loot or a discovered blueprint into the first room.
@@ -92,10 +105,10 @@ npm run check
 
 This checks JavaScript syntax and runs Node's built-in test runner. The repository's GitHub Actions workflow executes these checks on pull requests. Gameplay rules live in `engine.js`; UI, interactions and animation effects in `app.js`; visual styles in `styles.css`; and offline caching in `sw.js`.
 
-**Progress and privacy:** Save files remain in your browser's local storage unless exported manually. No backend or player tracking. Import/export JSON is available from settings. v0.1–v0.6 saves migrate to v0.7. **An active expedition keeps its original collected dice, upgrades and loot** on import; its next run starts with the class signature kit. Legacy starter selections and equipped presets are discarded, while previously unlocked heroes and discoveries are preserved. Old shard counts cannot purchase power and are no longer shown.
+**Progress and privacy:** Save files remain in your browser's local storage unless exported manually. No backend or player tracking. Import/export JSON is available from settings. v0.1–v0.7 saves migrate to v0.8. **An active expedition keeps its original collected dice, upgrades and loot** on import; its next run starts with the class signature kit. Legacy starter selections and equipped presets are discarded, while previously unlocked heroes and discoveries are preserved. Old shard counts cannot purchase power and are no longer shown.
 
 ### Development branches and scope
 
-`main` remains the public Pages branch. The `dev` branch is for integrated test builds. No pre-run build editing is allowed: permanent progression only unlocks class availability, discoverable loot patterns, cosmetic records or optional challenges. New combat systems, saves and documentation should pass `npm run check` before merging. `npm run balance` runs a **seeded diagnostic agent** across all 12 Paths; this is not a human skill model or a success-rate target. See [RUN_PATHS.md](docs/RUN_PATHS.md) for edge cases, trade-offs and regression coverage.
+`main` remains the public Pages branch. The `dev` branch is for integrated test builds. No pre-run build editing is allowed: permanent progression only unlocks class availability, discoverable loot patterns, cosmetic records or optional challenges. New combat systems, saves and documentation should pass `npm run check` before merging. `npm run balance` runs three **seeded diagnostic strategies per hero** (class-aware safe, class-aware elite-seeking, generic melee approach); this is not a human skill model or a success-rate target. See [ENCOUNTERS.md](docs/ENCOUNTERS.md) and [RUN_PATHS.md](docs/RUN_PATHS.md) for edge cases, trade-offs and regression coverage.
 
 MIT licensed; see [LICENSE](LICENSE).

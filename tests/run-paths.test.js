@@ -85,7 +85,7 @@ test('Cinder Seer tracking shot drains Charge only if HP damage penetrates shiel
 test('Gloom Hound sprints three tiles and telegraphs a dodgeable pounce',()=>{
  const s=combat('guardian','hound',3),c=s.run.combat,e=c.enemies[0];e.x=2;e.y=0;
  e.intent={type:'move',name:'SPRINT',steps:3,targets:[]};endTurn(s);
- assert.equal(e.y,3);assert.equal(e.intent.name,'POUNCE');assert.equal(e.intent.tracking,false);
+ assert.equal(e.y,3);assert.equal(e.intent.name,'POUNCE · DODGE');assert.equal(e.intent.tracking,false);
  const initialHP=s.run.hp;const target=e.intent.targets[0];c.player={x:0,y:4};endTurn(s);assert.equal(s.run.hp,initialHP);
  assert.deepEqual(target,{x:2,y:4});
 });
@@ -101,7 +101,7 @@ test('run-specific utility dice gate their actions; their face effects are real'
 test('v0.5 saves keep their build and migrate cleanly with no phantom Paths',()=>{
  const s=combat('rogue');s.version=5;s.run.relics.push('twincut');s.run.diceLoadout.push('stride');
  const migrated=restore(JSON.parse(JSON.stringify(s)));
- assert.equal(migrated.version,7);assert.equal(migrated.run.oath,null);assert.ok(migrated.run.relics.includes('twincut'));
+ assert.equal(migrated.version,8);assert.equal(migrated.run.oath,null);assert.ok(migrated.run.relics.includes('twincut'));
  assert.equal(migrated.run.diceLoadout.length,3);
 });
 

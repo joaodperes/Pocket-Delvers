@@ -1,3 +1,5 @@
+> **v0.8 update:** The core roguelite and class rules below remain applicable. Enemy design, compulsory champion, poison movement, three-phase boss and the revised balance probe are documented in [ENCOUNTERS.md](ENCOUNTERS.md) and [BALANCE.md](BALANCE.md). Older v0.5–v0.7 diagnostics are historical baselines, not current outcomes.
+
 # Class economies & roguelite run identity — design history
 
 > **Current implementation: v0.7.** The class economies below originated in v0.5 and remain the foundation. For the *new* mutually exclusive Paths, creature behaviors, trade-off costs and balance procedure, read [RUN_PATHS.md](RUN_PATHS.md). This file preserves the v0.5 baseline so future balance changes can be compared rather than silently rewriting the design rationale.

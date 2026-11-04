@@ -107,7 +107,7 @@ test('v0.6 starter selectors and shards are discarded, old in-progress dice rema
  s.version=6;s.meta.blueprints.push('moon');s.meta.starters={arcanist:'moon'};
  s.meta.equipped=['moon','moon','moon'];s.meta.shards=256;
  const restored=restore(JSON.parse(JSON.stringify(s)));
- assert.equal(restored.version,7);
+ assert.equal(restored.version,8);
  assert.equal(restored.meta.starters,undefined);
  assert.equal(restored.meta.equipped,undefined);
  assert.equal(restored.meta.shards,undefined);

@@ -114,3 +114,19 @@
 /* v0.7: guild records are read-only reference, never a pre-run equipment menu. */
 .guild-records{max-width:760px;margin:16px auto 0;background:#172235}
 .guild-records>.hint{margin:12px 6px 0}
+
+/* v0.8 — clearly telegraphed tactical terrain and champion states. */
+.tile.toxic-tile{background:radial-gradient(circle at center,#4c5d3d,#28392f 75%);border-color:#9dc469}
+.tile.warning-tile{background:repeating-linear-gradient(45deg,#36443d,#36443d 8px,#3c4b3e 8px,#3c4b3e 16px);border-color:#b0ba7e}
+.tile-poison{position:absolute;inset:auto auto 10% 7%;font-size:21px;color:#b8e878;text-shadow:0 1px 4px #16210e,0 0 9px #9bd95c;z-index:1;pointer-events:none}
+.toxic-tile .tile-poison{animation:toxic-breathe 1.7s ease-in-out infinite alternate}
+.tile .danger-outline{pointer-events:none;z-index:1}
+.arena-legend .violet{background:#abc76b}
+.poison-mark{left:auto!important;right:1px!important;background:#b5d26b!important;color:#1e291b!important}
+.combat-fx-poison{color:#c8f69d;border-color:#8fd16d;background:#273c25}
+.projectile-poison{color:#b9e67b}
+.die.used:has(small){opacity:.35}
+.die.used:has(small) small{letter-spacing:.07em}
+@keyframes toxic-breathe{from{opacity:.6;transform:scale(.92)}to{opacity:1;transform:scale(1.1)}}
+@media(prefers-reduced-motion:reduce){.toxic-tile .tile-poison{animation:none}}
+@media(max-width:600px){.tile-poison{font-size:17px}.arena-legend{font-size:9px}.arena-legend span{gap:3px}}

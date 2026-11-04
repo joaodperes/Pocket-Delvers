@@ -179,7 +179,7 @@ test('v0.4 save migration preserves a chosen legacy blueprint and all existing d
   s.run.diceLoadout=['standard','stride','moon','knives'];
   s.run.combat.dice=s.run.diceLoadout.map((kind,id)=>({id,kind,value:6,used:false}));
   const next=restore(s);
-  assert.equal(next.version,7);
+  assert.equal(next.version,8);
   assert.equal(next.meta.starters,undefined);
   assert.equal(next.run.diceLoadout.length,4);
   assert.ok(next.run.combat.dice.every(v=>v.value===4));

@@ -42,3 +42,32 @@ for size in [192,512]:
  d.rounded_rectangle((5*u,5*u,59*u,59*u),radius=12*u,fill='#263647',outline='#cda66f',width=round(2*u))
  d.polygon(pts([(32,7),(52,29),(32,54),(12,29)]),fill='#d9b37a');d.polygon(pts([(32,12),(47,30),(32,49),(17,30)]),fill='#303a4c')
  d.line(pts([(21,18),(43,43)]),fill='#e5d5ab',width=round(5*u));d.line(pts([(43,18),(21,43)]),fill='#87d6bc',width=round(5*u));im.save(out/f'icon-{size}.png')
+
+# v0.8 distinctive silhouettes: each threat is readable at twenty pixels.
+human('shieldbreaker','#b87856','#d8a872','helm','sword')
+human('duelist','#6d637d','#bda5d9','hood','dagger')
+human('sniper','#5b537f','#886dbe','hood','bow')
+human('drummer','#ab7657','#dfb589','helm','staff')
+human('summoner','#55577e','#a3aed8','hat','staff')
+human('executioner','#8e4d48','#c67e64','helm','sword')
+human('binder','#55437a','#a7a1d4','hat','staff')
+for name,base,cap,spots in [
+ ('spore','#406a54','#abcc7e','#e4b99b'),
+ ('matriarch','#485746','#d0c693','#cf9389')]:
+ im=Image.new('RGBA',(20,20));d=ImageDraw.Draw(im)
+ d.rectangle((6,10,13,18),fill=B);d.rectangle((8,9,11,17),fill=base)
+ d.ellipse((1,3,18,12),fill=B);d.ellipse((2,4,17,11),fill=cap)
+ for x,y in [(5,6),(12,7),(9,9),(14,5)]:d.rectangle((x,y,x+1,y+1),fill=spots)
+ d.point((9,13),fill='#f5d3a2');d.point((12,13),fill='#f5d3a2')
+ im.save(out/f'{name}.png')
+for name,col in [('wisp','#9cd5eb'),('crystal','#d1a5f1')]:
+ im=Image.new('RGBA',(20,20));d=ImageDraw.Draw(im)
+ if name=='crystal':
+  d.polygon([(10,1),(17,7),(14,18),(6,18),(3,7)],fill=B)
+  d.polygon([(10,2),(16,8),(13,17),(7,17),(4,8)],fill=col)
+  d.line((10,3,10,16),fill='#f7f2ff',width=1)
+ else:
+  d.ellipse((3,3,17,16),fill=B);d.ellipse((4,4,16,15),fill=col)
+  d.ellipse((7,8,9,10),fill='#2b485d');d.ellipse((12,8,14,10),fill='#2b485d')
+  d.polygon([(5,14),(8,18),(10,15),(12,19),(15,13)],fill=col)
+ im.save(out/f'{name}.png')
