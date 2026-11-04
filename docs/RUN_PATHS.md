@@ -1,10 +1,10 @@
-# v0.6 Run Paths: class identity, enemy pressure and balance
+# v0.7 Run Paths: class identity, enemy pressure and balance
 
-**Status:** implemented in `dev` for playtesting. GitHub Pages continues to publish `main` until reviewed. [DESIGN.md](DESIGN.md) records the v0.5 foundations; this is the current canonical guide for new v0.6 mechanics.
+**Status:** implemented in `dev` for playtesting. GitHub Pages continues to publish `main` until reviewed. [DESIGN.md](DESIGN.md) records the v0.5 foundations; this is the canonical guide for run-only class Paths added in v0.6.
 
 ## Design goals and scope
 
-1. **One identity-defining decision early:** after room 1, gain a die (or, as Rogue, choose a relic); after room 2, choose **one** of three mutually exclusive Paths. You cannot change it until the run ends. Do not add permanent currencies or talent trees.
+1. **One identity-defining decision early:** after room 1, choose a die from three varying offers (or, as Rogue, choose a relic); after room 2, choose **one** of three mutually exclusive Paths. You cannot change it until the run ends. Do not add permanent currencies or talent trees.
 2. **Distinct costs, not strictly bigger numbers:** every path has a downside (less Guard, weaker attacks, capped movement, extra Charge cost or max-HP loss). Previews must reflect the choice so the player can make decisions without consulting a spreadsheet.
 3. **Enemy diversity should challenge habits:** tracking fire tests cover and Guard; fast telegraphed lunges test repositioning; Charge drain matters mainly for mage builds and applies only when HP is actually damaged.
 4. **Runs have varied *choices*, not arbitrary power:** extra dice, action restrictions, class distributions and reward filtering mean the same roll can matter differently across classes.
@@ -18,9 +18,9 @@
 | Room 1 cleared | Non-Rogue chooses second die; Rogue chooses a relic | No |
 | Room 2 cleared | Pick one of three Path options matched to hero | No |
 | Later encounters / shop | Dice, relics, potions, and conditional enemy trophies | No |
-| Elite and boss | Existing permanent blueprint and hero progression | Yes |
+| Elite and boss | Discover new loot dice patterns and unlock heroes | Yes |
 
-Old v0.1–v0.5 saves retain their existing in-progress dice, character unlocks and relics. An older run already beyond room 2 but missing a Path gets a Path choice at its next non-boss reward; a run that reaches the final boss without another reward can complete without a Path. Existing runs aren't rewritten retroactively.
+Old v0.1–v0.6 saves retain their existing in-progress dice, character unlocks and relics. An older run already beyond room 2 but missing a Path gets a Path choice at its next non-boss reward; a run that reaches the final boss without another reward can complete without a Path. Existing runs aren't rewritten retroactively.
 
 ## Path matrix — precise mechanics
 
@@ -76,7 +76,7 @@ Later ordinary rooms draw a mixed population rather than always beginning with a
 | **Cindercoil** | `1 / 1 / 2 / 4 / 5 / 6` | Strike, Skill | Casting on **6** refunds 1 Charge; cannot Move or Guard |
 | **Iron Bastion** | `2 / 3 / 4 / 4 / 5 / 5` | Move, Guard | Guard on **4+** also gains 1 Charge; cannot Strike or Skill |
 
-These dice can appear as later run rewards or shop outcomes. They are intentionally not new permanent starter blueprints. Rogue's global roll cap of four still applies. Because Cindercoil's six-point refund would be impossible for Rogue, **the random loot pool excludes Cindercoil for Rogue**. This keeps rewards meaningful without silently changing the global roll cap. Other dice, such as Gravebone, can still offer lower-face secondary effects.
+These dice can appear as later run rewards or visible shop offers. They are not pre-run equip choices. Rogue's global roll cap of four still applies. Because Cindercoil's six-point refund would be impossible for Rogue, **the random loot pool excludes Cindercoil for Rogue**. This keeps rewards meaningful without silently changing the global roll cap. The Rogue also avoids Gravebone as random loot, because its high-roll skill-refund effect cannot trigger under a cap of four.
 
 ## Measured diagnostics and honest limitations
 
@@ -108,3 +108,7 @@ A 90-run-per-Path local diagnostic after tuning revealed: Guardian about **82–
 - **Run history and seed replay:** deterministic seed recording and an optional run recap, with no cross-device tracking or online leaderboard requirements.
 
 Prioritize meaningful counterplay, not raw extra stats. Avoid monetization, time gates and grind-based power bonuses.
+
+## Fresh-start consistency (v0.7)
+
+A **Path** is exclusively a run choice; the `run.oath` field is reset at the start of every expedition. Gold, bought upgrades, consumables, relics, and additional dice are also run-only. The historical Dice Forge screen and legacy shard currency have been retired; discovered dice patterns enrich reward pools but cannot override a class signature starter. Check [ROGUELITE_AUDIT.md](ROGUELITE_AUDIT.md) before adding new menus, merchants, trophies, or progression unlocks.

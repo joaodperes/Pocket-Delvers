@@ -1,6 +1,6 @@
 # Class economies & roguelite run identity — design history
 
-> **Current implementation: v0.6.** The class economies below originated in v0.5 and remain the foundation. For the *new* mutually exclusive Paths, creature behaviors, trade-off costs and balance procedure, read [RUN_PATHS.md](RUN_PATHS.md). This file preserves the v0.5 baseline so future balance changes can be compared rather than silently rewriting the design rationale.
+> **Current implementation: v0.7.** The class economies below originated in v0.5 and remain the foundation. For the *new* mutually exclusive Paths, creature behaviors, trade-off costs and balance procedure, read [RUN_PATHS.md](RUN_PATHS.md). This file preserves the v0.5 baseline so future balance changes can be compared rather than silently rewriting the design rationale.
 
 ## v0.5 baseline
 
@@ -54,10 +54,14 @@ These are per-die raw direct damage averages, not win-rate estimates; misses due
 - Metaprogression that unlocks **choices** (new dice/sidegrade relics), not unconditional starting damage or free action count.
 - Seeded daily runs and balance telemetry in a local-only test harness, without requiring a server.
 
-No additional permanent currencies or character stat trees are part of v0.5 or v0.6: the depth comes from different dice, constraints and enemy counterplay.
+No additional permanent currencies or character stat trees are part of v0.5–v0.7: the depth comes from different dice, constraints and enemy counterplay.
 
 ## Automated balance probe (directional, not human win rates)
 
 Run `npm run balance` to sample 200 seeded ten-room expeditions per class with the same primitive deterministic agent. The agent prefers casting and attacks when possible, walks toward targets, and takes the first suitable rewards; it does not optimize positioning, advanced synergy or resource preservation. It cannot establish fairness or player win probability. It **can** quickly reveal severe class-specific stalls or unintended changes to action economy.
 
 In the current baseline the probe completes 186/200 Guardian, 155/200 Ranger, 90/200 Arcanist and 181/200 Rogue expeditions. These are intentionally *not* target win rates. The Arcanist was initially completing only 36/200 before the +2 Skill base adjustment, so that change was retained. A dedicated playtest is still required for Guardian/Rogue difficulty and whether enemy variety is sufficient.
+
+## v0.7 roguelite integrity decision
+
+The experimental v0.5–0.6 Dice Forge conflicted with the class identity above: blueprint ownership could replace a fixed starting die, and a legacy guild equipment preset lived alongside the supposed fresh-start rules. **The forge and its persistent selectors are removed.** Signature dice and initial action budget are fixed per hero. Permanent blueprints now unlock **possible dungeon rewards**, not starting dice or direct stat bonuses. The first-room second-die offers are randomized across unrestricted, utility and offensive categories without removing a safe option. See [ROGUELITE_AUDIT.md](ROGUELITE_AUDIT.md) for state contracts, save migration and regression tests.

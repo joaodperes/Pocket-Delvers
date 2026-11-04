@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  fresh, restore, start, enter, choose, setAction, act, endTurn, reroll, equipStarter,
-  availableStartingDice, actionPreview, damageAgainst, maxChargeFor, maxDiceFor,
+  fresh, restore, start, enter, choose, setAction, act, endTurn, reroll, 
+   actionPreview, damageAgainst, maxChargeFor, maxDiceFor,
   rollCapFor, DICE_TYPES, HEROES, RELICS
 } from '../engine.js';
 
@@ -34,21 +34,16 @@ test('each hero has a distinct, internally coherent signature kit',()=>{
   assert.equal(new Set(distributions).size,4);
 });
 
-test('per-class starter choices do not overwrite each other or grant locked dice',()=>{
+test('class starter distributions cannot be replaced by blueprint discoveries',()=>{
   const s=fresh();s.meta.heroes.push('arcanist');
-  assert.deepEqual(availableStartingDice(s,'guardian'),['ironheart','standard']);
-  assert.equal(equipStarter(s,'guardian','moon'),false);
-  s.meta.blueprints.push('moon');
-  assert.ok(equipStarter(s,'guardian','moon'));
-  assert.equal(equipStarter(s,'arcanist','standard'),true);
-  assert.equal(s.meta.starters.ranger,'wayfinder');
-  assert.equal(s.meta.starters.rogue,'knives');
-  const restored=restore(JSON.parse(JSON.stringify(s)));
-  assert.equal(restored.meta.starters.guardian,'moon');
-  assert.equal(restored.meta.starters.arcanist,'standard');
-  assert.equal(restored.meta.starters.ranger,'wayfinder');
-  assert.ok(start(restored,'guardian'));
-  assert.equal(restored.run.diceLoadout[0],'moon');
+  s.meta.blueprints.push('moon','evenstone');
+  const legacy={...s,version:6,meta:{...s.meta,starters:{guardian:'moon',arcanist:'evenstone'},equipped:['moon','moon','moon']}};
+  const restored=restore(JSON.parse(JSON.stringify(legacy)));
+  assert.equal(restored.meta.starters,undefined);
+  assert.equal(restored.meta.equipped,undefined);
+  assert.ok(start(restored,'arcanist'));
+  assert.deepEqual(restored.run.diceLoadout,['aether']);
+  assert.ok(restored.meta.blueprints.includes('evenstone'));
 });
 
 test('Arcanist basic Strikes are dice-minus-two BEFORE Ward, and still channel Charge at zero damage',()=>{
@@ -109,8 +104,7 @@ test('Rogue first room offers build options, not an immediate third action',()=>
   assert.equal(s.phase,'reward');
   assert.equal(s.run.choices.length,3);
   assert.ok(s.run.choices.every(x=>!x.id.startsWith('die:')));
-  assert.ok(s.run.choices.some(x=>x.id==='twincut'));
-  assert.ok(s.run.choices.some(x=>x.id==='underhand'));
+  assert.ok(s.run.choices.some(x=>['twincut','underhand'].includes(x.id)));
 });
 
 test('Arcanist can build for large Charge and stronger Skills at the expense of Guard and Strike',()=>{
@@ -180,13 +174,13 @@ test('class-specific tradeoffs are never randomly offered to other classes',()=>
 
 test('v0.4 save migration preserves a chosen legacy blueprint and all existing dice',()=>{
   const s=arena('rogue',4);s.version=4;
-  delete s.meta.starters;
-  s.meta.blueprints.push('moon');s.meta.equipped[0]='moon';
+  s.meta.starters={rogue:'moon'};
+  s.meta.blueprints.push('moon');s.meta.equipped=['moon','moon','moon'];
   s.run.diceLoadout=['standard','stride','moon','knives'];
   s.run.combat.dice=s.run.diceLoadout.map((kind,id)=>({id,kind,value:6,used:false}));
   const next=restore(s);
-  assert.equal(next.version,6);
-  assert.equal(next.meta.starters.rogue,'moon');
+  assert.equal(next.version,7);
+  assert.equal(next.meta.starters,undefined);
   assert.equal(next.run.diceLoadout.length,4);
   assert.ok(next.run.combat.dice.every(v=>v.value===4));
 });

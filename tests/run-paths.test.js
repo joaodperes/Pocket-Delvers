@@ -101,7 +101,7 @@ test('run-specific utility dice gate their actions; their face effects are real'
 test('v0.5 saves keep their build and migrate cleanly with no phantom Paths',()=>{
  const s=combat('rogue');s.version=5;s.run.relics.push('twincut');s.run.diceLoadout.push('stride');
  const migrated=restore(JSON.parse(JSON.stringify(s)));
- assert.equal(migrated.version,6);assert.equal(migrated.run.oath,null);assert.ok(migrated.run.relics.includes('twincut'));
+ assert.equal(migrated.version,7);assert.equal(migrated.run.oath,null);assert.ok(migrated.run.relics.includes('twincut'));
  assert.equal(migrated.run.diceLoadout.length,3);
 });
 
