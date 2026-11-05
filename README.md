@@ -1,103 +1,114 @@
 # Pocket Delvers
 
-**Start with one die. Earn your next move. One more room.**
+**Different heroes. Different dice. One more room.**
 
-Pocket Delvers is an original, mobile-first, tactical dice roguelite that runs entirely in the browser. It needs no backend or runtime dependencies and supports GitHub Pages, offline installation, and local saves.
+A mobile-first tactical dice roguelite for GitHub Pages. No server, accounts, downloads, or runtime dependencies. It autosaves locally, offers JSON import/export and offline installation as a Progressive Web App.
 
-## Play (v0.4 development preview)
+**Status:** v0.8 development candidate, not a production release. Read the [combat encounters guide](docs/ENCOUNTERS.md), [balance methodology](docs/BALANCE.md), [roguelite integrity audit](docs/ROGUELITE_AUDIT.md), [class design](docs/DESIGN.md), and [Run Paths guide](docs/RUN_PATHS.md).
 
-1. Choose a hero from the guild. New players begin with **Guardian**, unlocking the **Ranger** by reaching room 3, **Arcanist** by defeating their first elite, and **Rogue** by defeating the final boss. Existing v0.1/v0.2 players retain previously available characters.
-2. Start with one die. Your first victory offers three choices for a second die; subsequent battles, elites, and merchants can add a third. Some dice only allow specific actions. Pick a die, pick a permitted action, then tap an available tile or enemy. Spent dice are unavailable until the next round. **Move** goes up to the rolled number of traversable orthogonal tiles.
-3. **Strikes** deal reliable damage and generate **+1 Charge**. **Guard** adds shield until the end of the turn and generates **+1 Charge**. **Skills** require a die showing **3+** and spend **2 Charge**. Charge begins at 1 per encounter, persists between rounds, and caps at 4.
-4. Read enemy arrows/damage markers. Melee enemies hunt two tiles each enemy turn. Ash Archers shoot TRACKING arrows whenever you stay within range and clear line of sight. Moving sideways is not enough: hide behind a wall, leave range, block, stun, or kill them. Fixed melee attacks still allow traditional dodging. Expand the enemy roster or tap an enemy to inspect its attack and defenses.
-5. **Physical** damage is reduced by enemy **Armor**; **Arcane** damage by **Ward**. Both are flat reductions. The number on a valid target shows actual direct damage **after** resistances. Damage previews are recalculated for each selected die.
-6. Win fights, choose relics, collect equipment dropped by different monster types, unlock custom dice, and delve to room 10.
+## Play
 
-### Classes and reasons to choose them
+1. Choose a hero. The Guardian is available from the start; reach room 3 to unlock Ranger, defeat an elite to unlock Arcanist, and defeat the Grave Warden to unlock Rogue. Existing saves retain previously unlocked heroes.
+2. Each class has a **fixed signature starting kit** and different dice/resource economy. The Rogue starts with two low dice and can never roll above four; other heroes start with one die. There is **no starter dice selection or permanent loadout**. Choose a class, then build entirely inside the expedition.
+3. In combat, choose an unused die, choose an action it supports, and tap a valid tile or enemy. Dice return each round. Move spends a die to travel **up to the rolled value** through traversable tiles; Guard protects you until the enemy turn completes.
+4. **Strikes** and **Guard** produce +1 Charge. **Skills** require a die showing 3+ and spend 2 Charge. The Arcanist starts battles with 2 Charge, has a 6-Charge maximum, and regenerates 1 Charge at the start of every new round. Arcane Skills also gain +2 baseline damage. Stronger spells are balanced by basic Strikes that start at **max(0, roll − 2)** arcane damage before Ward and relics.
+5. Enemies telegraph their attacks. Most melee enemies pursue up to two tiles per turn; **Gloom Hounds** sprint three and announce a dodgeable Pounce. **Ash Archers** and **Cinder Seers** fire tracking shots; Seers drain one Charge only if their attack damages HP. Break line of sight with cover, leave range, block, stun, or kill an enemy to avoid its attack. Actual post-Armor/Ward damage is visible on enemies before choosing an attack.
+6. Earn run-only dice and choose relics. **Cindercoil** can Strike or cast but never Move or Guard; **Iron Bastion** can Move or Guard but cannot attack. Specialized dice may have high values but fewer allowed actions. Relics can enhance spells at the cost of Guard or HP, reward distant attacks over close-range fighting, or turn weak rolls into valuable Bleed/Charge generators.
+7. **Room 5 is a compulsory champion fight** (Iron Executioner, Spore Matriarch or Soul Binder); optional champions also appear in other branches. Poisonous tiles warn for a full turn before dealing damage, and the game automatically picks the least-dangerous route within your movement die. **The final Grave Warden has three phases**, adding poison and reinforcements as health falls.
+8. After room 2, choose **one of three run-only Paths** for your hero. In room 10, defeat the Warden and any remaining summons to win; otherwise die. Dice, relics, gold, health bonuses, Strike/Skill upgrades, consumables, and Paths all reset on the next run. Only class unlocks, discovered dice *patterns*, guild records and settings persist. Autosave preserves an **ongoing** run across sessions.
 
-| Delver | Basic attack | Special (costs 2 Charge) | Identity |
-| --- | --- | --- | --- |
-| Guardian | Physical +1, range 1 | Shield Bash: melee damage and stun | Guard +2; low-die Guardian/Bastion combinations |
-| Ranger | Physical +1, range 3 | Aimed Shot: range 4, armor piercing, +2 on 6 | Ranged positioning, high-face rewards |
-| Arcanist | Arcane +2, range 3 | Chain Bolt: chain half damage to adjacent foes | Punishes armored targets, multi-hit Charge refunds |
-| Rogue | Physical +1, range 1 | Shadowstep: range 2, reposition and gain Guard | Odd rolls cause Bleed; free reroll each round |
+### Classes
 
-Regular attacks are **not inferior skills**: strikes generate Charge, sometimes hit harder than specials (Guardian), and activate conditional effects on equipment. Skills cost Charge for a control, range, positioning, or multi-target payoff.
+| Class | Starting dice | Maximum dice | Roll cap | Charge cap / regeneration | Combat identity |
+|---|---|---:|---:|---|---|
+| Guardian | Ironheart `1/2/2/3/4/5` | 3 | 6 | 4 / none | Melee tank; extra Guard, stuns, can trade speed for survival |
+| Ranger | Wayfinder `1/2/3/4/5/5` | 3 | 6 | 4 / none | Physical range 3, armor-piercing skill; distance-rewarding relics |
+| Arcanist | Aether Spark `1/2/2/3/4/6` | 3 | 6 | **6 / +1 per turn** | Arcane skills and multi-target chains; extremely weak basic Strike; risky spell relics |
+| Rogue | **Two** Cutpurse dice `1/2/2/3/4/4` | **4** | **4 for every die** | 4 / none | More actions, −1 Strike damage, low rolls, Bleed and extra rerolls |
 
-### Loot that changes playstyle
+Face distributions are deliberate class trade-offs, not hidden bonuses. When a Rogue acquires a high-face die, 5 and 6 turn into 4. The backpack shows actual effective faces; **Guild Records** is a read-only discovery catalogue, not a prep screen. Class-incompatible relics are filtered from rewards.
 
-Each regular battle offers three choices. A monster you defeated can offer its specific drop alongside two other items. Relic cards show **synergy tags** such as `ARCANE`, `BLEED`, `RANGED`, `GUARD`, and `DICE`, with class-relevant cards highlighted.
+### Paths: your expedition's one defining commitment
 
-- **Mire Slime → Mire Catalyst:** odd Strikes add Bleed damage over the next two enemy turns.
-- **Boneguard → Boneguard Plating:** even Guard rolls give bonus shield.
-- **Ash Archer → Ashstring:** ranged Strikes from two or more tiles away hit harder.
-- **Hollow Brute → Hollow Grip:** Skills deal extra damage to adjacent enemies.
-- **Bastion Link:** a 1 or 2 becomes an excellent Guard roll and generates extra Charge.
-- **Ley Capacitor:** multi-target Skills can refund Charge.
-- **Hawkeye Wrap:** ranged Strikes on 5+ deal additional damage.
-- **Night Oil:** odd physical Strikes add Bleed.
+After clearing **room 2**, choose one of three class-specific Paths. The choice lasts until the expedition ends and cannot be changed. In an older save already beyond room 2, your next non-boss reward will offer the choice instead.
 
-Some relics still grant straightforward survival or damage improvements, intentionally providing approachable alternatives to synergy-focused builds. Monster drops are optional reward picks, never forced.
+| Class | Path A | Path B | Path C |
+|---|---|---|---|
+| Guardian | **Stone Sentinel:** stronger Guard, movement capped at 2 | **Vengeful Edge:** +1 Strike and healing on kills, −2 Guard | **Shield Runner:** moving gives Guard, slightly weaker Skill |
+| Ranger | **Eagle Eye:** long-range bonus, adjacent penalty | **Windrunner:** movement generates Guard and Charge, −1 Strike | **Marked Quarry:** focus-fire bonus on marked targets, −1 Skill |
+| Arcanist | **Overchannel:** +4 Skill but costs 3 Charge and −1 Guard | **Wardweaver:** casting generates Guard but deals −2 Skill damage | **Frail Star:** +3 Skill at the price of 5 max/current HP **for this run** and −2 Guard |
+| Rogue | **Flurry:** bonus on later Strikes in the same turn, −2 Guard | **Smoke Dancer:** movement generates Guard and Charge, −1 Strike | **Loaded Chances:** +1 reroll/round, lower Strike and Guard |
 
-### Custom dice and rerolls
+This is not a new currency or leveling tree. Paths are **exclusive run identities**. Their bonuses appear in action previews, and the choice is listed in the character pack and combat screen.
 
-Select ONE permanent starting die at the guild. Collect a second and third die inside each expedition; all in-run extra dice reset after that expedition. Every die has actual weighted faces and conditional mechanics, rather than an unconditional upgrade:
+### Why Strike, Guard and Skill all matter
 
-| Die | Faces | Effect | Source |
-| --- | --- | --- | --- |
-| Adventurer | `1 2 3 4 5 6` | Balanced | Starting die |
-| Evenstone | `1 2 2 4 4 6` | Even Guard adds +2 | Elite |
-| Moonshard | `1 1 3 3 5 5` | Odd Strikes +1 damage | Elite |
-| Gravebone | `1 2 3 3 5 6` | Guard with 1 grants +2 Charge; Skill with 6 refunds 1 Charge | Boss |
-| Stormglass | `1 2 3 4 5 6` | Skills on 4+ deal +1 damage | Later boss |
-| Windstep | `3 4 4 5 6 6` | Only MOVE/GUARD; Guard +1 | Expedition |
-| Emberfang | `1 2 3 4 5 6` | Only STRIKE/GUARD; low Strikes +3 | Expedition |
-| Spellweave | `2 3 3 4 5 6` | Only SKILL/GUARD; Guard gives extra Charge | Expedition |
+- **Strike:** direct physical or arcane damage; generates 1 Charge, can apply Bleed, trigger distance or low-roll bonuses, or simply channel magic even if it deals zero damage.
+- **Guard:** survives telegraphed damage and generates 1 Charge. Some builds specialize in low-roll guards or shield-heavy play.
+- **Skill:** spends 2 Charge and requires 3+, but produces tactical effects such as stun, armor piercing, chained magic or repositioning. Damage alone is not always its advantage.
+- **Move:** positioning uses dice too. Tracking projectiles remain threatening if you move sideways; blocking line of sight or escaping their range matters.
 
-The v0.2 **Twin Six** blueprint is automatically migrated to **Gravebone**; permanent progression is not lost.
+### Run-defining loot examples
 
-Every character has one free die reroll per round, the Rogue gains a second, and Twilight Mirror and Fortune Tonics offer further rerolls. Rerolling never spends the die.
+| Item | Benefit | Trade-off |
+|---|---|---|
+| Unstable Catalyst (Arcanist) | Skills +3 | Strikes −1 and Guard −3 |
+| Shattered Reservoir (Arcanist) | +2 maximum Charge; Skills +2 at 5+ current Charge | Guard −2 |
+| Blood Conduit (Arcanist) | Skills +4 | Spend 2 HP per cast; cannot cast at 2 HP or less |
+| Longshot Strings (Ranger) | Strikes at distance 3+ gain +3 | Adjacent Strikes −2 |
+| Counterweight Plate (Guardian) | Guard +3 | Movement −1 tile, minimum one |
+| Tempered Edge (Guardian) | Physical Strikes +2 | Guard −2 |
+| Underhand Tricks (Rogue) | Rolls 1–2 deal +3 Strike damage | Skills −2 |
+| Twin Cut (Rogue) | Second Strike of the round applies +2 Bleed | Guard −2 |
 
-### UI and effects
+Many other general relics and creature drops still exist, including bleed, guard, range, reroll and multi-target synergies. Items appear as **choices**, not automatic stacks. Class-specific items are never offered to other classes.
 
-Action buttons preview base damage, Guard, movement, and skill eligibility; attackable targets show damage after Armor/Ward. The character pack (♧) shows bonuses, class stats, relics, equipped dice, consumables, Charge, and reroll resources. Enemies show HP, armor, ward, Bleed, and announced actions.
+### Tactical monsters and champions (v0.8)
 
-Dice have roll animations. **v0.4 adds moving weapon / spell projectiles, target-flinch effects and visible enemy attacks**, in addition to class-specific impact flashes, Guard and damage feedback, honoring `prefers-reduced-motion`. These are short readable impact effects, not full frame-by-frame character sprite animations.
+Common enemies now include Shieldbreakers (crack Guard), Hollow Duelists (riposte against repeated melee Strikes), Venom Spores (poison terrain), Hex Snipers (fixed firing lanes), War Drummers (buff allies) and Grave Summoners (raise Wisps). Every action has a stated telegraph, a visible counter and a specialized visual on the board. The three named champions have different signatures, rather than serving as Brutes with more HP. Boss control now uses a two-Skill stagger instead of an unconditional Shield Bash stun.
 
-### Saving / offline
+- **Marked tile/lane:** move off the highlighted squares before the enemy turn.
+- **Tracking shot:** sideways movement is not enough; use cover, Guard, range or a stun.
+- **Poison:** a green warning turns active on the *next* player turn; entering a toxic tile costs 1 HP, and ending there costs 2 (boss poison: 3). Guard does not block this. Higher movement dice can choose longer safe routes.
+- **Soul Binder:** a Crystal can disable one die when you have at least two; destroy it to release that die and regain Charge. Single-die heroes cannot be locked out.
+- **Room 5:** forced Trial of Champions to prevent safe-route farming of easy wins.
 
-The game saves automatically to `localStorage`, with JSON export and import in Settings. Save files from v0.1, v0.2, and v0.3 are migrated on load, with previous hero access preserved. Offline play uses a versioned service worker; new releases require an online visit to update cached assets.
+See [ENCOUNTERS.md](docs/ENCOUNTERS.md) for encounter state diagrams and precise rules and [BALANCE.md](docs/BALANCE.md) for seeded-agent results and limitations.
 
-## Development
+### Dice progression
 
-The game itself has zero install or build dependencies. For checks, use Node.js 22+:
+Each fresh run always equips only its class signature dice; you cannot take last run's loot or a discovered blueprint into the first room.
+
+- Guardian, Ranger and Arcanist begin each run with one die. Their first completed room offers **three randomized options**: one unrestricted die, one defensive/utility die and one offensive restricted die. These start with standard candidates and broaden as you discover blueprints.
+- Rogue begins with two lower dice and chooses a relic after the first room instead of immediately gaining a third action.
+- Later rooms and the merchant can award more dice, up to the class cap (three, or four for Rogue). After room 2 you first select a Path, delaying another relic or die reward in exchange for class-defining strategy.
+- Specialized dice may be limited to `MOVE/GUARD`, `STRIKE/GUARD`, `SKILL/GUARD`, or `STRIKE/SKILL`. Cindercoil refunds Charge on a six-point Skill; Iron Bastion generates extra Charge from high Guard rolls. Their limitations are visibly marked on action buttons.
+- Elite victories discover Evenstone then Moonshard; boss wins discover Gravebone then Stormglass. These patterns join the **dice reward pool** for future choices; they never grant starting power, bonus actions, or equipment.
+- The merchant shows the **exact die and faces** for sale, not a hidden random die. Merchant gold and upgrades are lost when the expedition ends.
+- There is no persistent shard shop or Dice Forge. Historical shards from old saves were a dead currency and are now discarded during migration; any prior hero unlocks remain intact.
+
+## Install and run
+
+No build step is needed. Serve the repository on localhost to use browser modules and the service worker:
+
+```bash
+python3 -m http.server 5173
+```
+
+Then open http://localhost:5173/. Alternatively, deploy `main` to **Settings → Pages → Deploy from a branch → main / (root)**; only merged changes to `main` are intended for the public site. On iOS, Safari → Share → Add to Home Screen.
+
+## Development and tests
 
 ```bash
 npm run check
-npm run dev
 ```
 
-Then open <http://localhost:5173>. `npm run check` runs syntax checks and tests. The project is a static PWA with `index.html`, `app.js`, `engine.js`, `styles.css`, `assets/`, `manifest.webmanifest`, and `sw.js`.
+This checks JavaScript syntax and runs Node's built-in test runner. The repository's GitHub Actions workflow executes these checks on pull requests. Gameplay rules live in `engine.js`; UI, interactions and animation effects in `app.js`; visual styles in `styles.css`; and offline caching in `sw.js`.
 
-## Publish on GitHub Pages
+**Progress and privacy:** Save files remain in your browser's local storage unless exported manually. No backend or player tracking. Import/export JSON is available from settings. v0.1–v0.7 saves migrate to v0.8. **An active expedition keeps its original collected dice, upgrades and loot** on import; its next run starts with the class signature kit. Legacy starter selections and equipped presets are discarded, while previously unlocked heroes and discoveries are preserved. Old shard counts cannot purchase power and are no longer shown.
 
-Production comes from `main` with **Settings → Pages → Build and deployment → Deploy from a branch → main / (root)**. Development work goes into `dev` and is reviewed via pull request. The expected production address after Pages is enabled is <https://joaodperes.github.io/Pocket-Delvers/>.
+### Development branches and scope
 
-## Status
+`main` remains the public Pages branch. The `dev` branch is for integrated test builds. No pre-run build editing is allowed: permanent progression only unlocks class availability, discoverable loot patterns, cosmetic records or optional challenges. New combat systems, saves and documentation should pass `npm run check` before merging. `npm run balance` runs three **seeded diagnostic strategies per hero** (class-aware safe, class-aware elite-seeking, generic melee approach); this is not a human skill model or a success-rate target. See [ENCOUNTERS.md](docs/ENCOUNTERS.md) and [RUN_PATHS.md](docs/RUN_PATHS.md) for edge cases, trade-offs and regression coverage.
 
-**v0.4 development branch**: one-die expeditions, tactical enemy pressure, specialized dice and visible attack animations. Damage, enemy HP, rewards, and progression still need playtesting over complete expeditions; the underlying combat rules are unit-tested, but final balance is not guaranteed.
-
-## License
-
-MIT — see [LICENSE](LICENSE).
-
-### v0.4 design and difficulty notes
-
-- **Start weak, build power:** every new run starts with only your chosen first die. Your first defeated room guarantees a choice of second die; later rewards can offer a third. The goal is to create distinct builds and harder early-game decisions without increasing the number of interface controls.
-- **Dice have tradeoffs:** Windstep's high movement/Guard rolls cannot be spent on attacking; Emberfang cannot Move or cast; Spellweave cannot Move or Strike. Disabled actions are visually indicated.
-- **Enemies close gaps:** melee enemies hunt up to two tiles each enemy turn and route around walls. Archers are guaranteed in standard encounters from room 2, use tracking shots when the hero is within line of sight and range, and reposition when obstructed. The boss gains an alternating tracking projectile on even turns.
-- **Honest threat display:** tracking targets are not fixed squares. Movement options with `!` are still exposed to a tracking shot. Guard/cover/range remain useful counterplay.
-- **Motion:** actual projectile travel, class-colored impacts, enemy missile effects and hit reactions; reduced-motion preference remains supported.
-- **Old runs:** saves in progress with three dice keep their existing loadout so an update does not remove earned progress mid-encounter.
-
-Difficulty has automated mechanics tests but still needs real run-by-run tuning of damage, healing and reward frequencies.
+MIT licensed; see [LICENSE](LICENSE).
